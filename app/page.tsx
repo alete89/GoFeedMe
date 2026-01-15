@@ -92,7 +92,15 @@ export default function Home() {
   return (
     <div className="max-w-2xl mx-auto p-8">
       <div className="bg-white rounded-lg shadow p-8">
-        <h1 className="text-3xl font-bold mb-2 text-gray-800">🍽️ GoFeedMe</h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-3xl font-bold text-gray-800">🍽️ GoFeedMe</h1>
+          <a 
+            href="/admin/resumen" 
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            Ver resumen de pedidos
+          </a>
+        </div>
         <p className="text-gray-600 mb-8">Elegí tu almuerzo de hoy</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
