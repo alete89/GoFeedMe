@@ -66,7 +66,13 @@ export default function Home() {
         <div className="bg-white rounded-lg shadow p-8 text-center">
           <h1 className="text-3xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
           <h2 className="text-2xl font-bold text-red-500 mb-2">Pedidos cerrados</h2>
-          <p className="text-gray-600">Ya no se pueden hacer más pedidos hoy.</p>
+          <p className="text-gray-600 mb-4">Ya no se pueden hacer más pedidos hoy.</p>
+          <a 
+            href="/admin/resumen" 
+            className="inline-block text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            Ir al resumen (admin)
+          </a>
         </div>
       </div>
     );

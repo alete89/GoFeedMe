@@ -103,14 +103,10 @@ export default function AdminSummaryPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="mb-8">
           <div className="text-center p-6 bg-gray-50 rounded border-2">
             <div className="text-5xl font-bold text-green-500">{orders.length}</div>
             <div className="text-sm text-gray-600 uppercase tracking-wide mt-2">Total de pedidos</div>
-          </div>
-          <div className="text-center p-6 bg-gray-50 rounded border-2">
-            <div className="text-5xl font-bold text-green-500">{Object.keys(groupedOrders).length}</div>
-            <div className="text-sm text-gray-600 uppercase tracking-wide mt-2">Platos diferentes</div>
           </div>
         </div>
 
