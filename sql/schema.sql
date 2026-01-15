@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS menus (
 CREATE TABLE IF NOT EXISTS orders (
   id SERIAL PRIMARY KEY,
   date DATE NOT NULL,
-  time VARCHAR(10) NOT NULL,
+  time VARCHAR(50) NOT NULL,
   name VARCHAR(255) NOT NULL,
   dish VARCHAR(255) NOT NULL,
   observations TEXT,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS config (
   id SERIAL PRIMARY KEY,
   date DATE UNIQUE NOT NULL,
-  status VARCHAR(10) NOT NULL CHECK (status IN ('open', 'closed')),
+  status VARCHAR(50) NOT NULL CHECK (status IN ('open', 'closed')),
   updated_at TIMESTAMP DEFAULT NOW()
 );
 

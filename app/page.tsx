@@ -13,6 +13,7 @@ export default function Home() {
   const [observations, setObservations] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
   const [ordersOpen, setOrdersOpen] = useState(true);
 
   useEffect(() => {
@@ -35,17 +36,26 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, dish: selectedDish, observations })
-    });
-    const data = await res.json();
-    setMessage(data.success ? '¡Pedido registrado!' : 'Error');
-    if (data.success) {
-      setName('');
-      setSelectedDish('');
-      setObservations('');
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, dish: selectedDish, observations })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage('¡Pedido registrado!');
+        setIsError(false);
+        setName('');
+        setSelectedDish('');
+        setObservations('');
+      } else {
+        setMessage(data.error || 'Error al registrar el pedido');
+        setIsError(true);
+      }
+    } catch (error) {
+      setMessage('Error de conexión. Por favor intentá de nuevo.');
+      setIsError(true);
     }
     setLoading(false);
   };
@@ -54,7 +64,7 @@ export default function Home() {
     return (
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-lg shadow p-8 text-center">
-          <h1 className="text-3xl font-bold mb-4">🍽️ GoFeedMe</h1>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
           <h2 className="text-2xl font-bold text-red-500 mb-2">Pedidos cerrados</h2>
           <p className="text-gray-600">Ya no se pueden hacer más pedidos hoy.</p>
         </div>
@@ -66,13 +76,13 @@ export default function Home() {
     return (
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-lg shadow p-8">
-          <h1 className="text-3xl font-bold mb-4">🍽️ GoFeedMe</h1>
-          <div className="text-center p-8 bg-gray-50 rounded border-2 border-dashed">
-            <h2 className="text-xl font-bold mb-2">📋 No hay menú cargado</h2>
-            <p className="text-gray-600 mb-4">El admin debe cargar el menú del día.</p>
-            <a href="/admin/menu" className="text-green-500 font-semibold hover:underline">
-              Ir a cargar menú (admin)
-            </a>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
+          <div className="text-center p-8 bg-gray-50 rounded border-2 border-dashed border-gray-300">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">📋 No hay menú cargado todavía</h2>
+            <p className="text-gray-600 mb-2">Parece que aún no se cargó el menú del día.</p>
+            <p className="text-gray-600 mb-8">
+              Si sos admin, <a href="/admin/menu" className="text-green-600 font-semibold hover:underline">cargá el menú acá</a>.
+            </p>
           </div>
         </div>
       </div>
@@ -82,7 +92,7 @@ export default function Home() {
   return (
     <div className="max-w-2xl mx-auto p-8">
       <div className="bg-white rounded-lg shadow p-8">
-        <h1 className="text-3xl font-bold mb-2">🍽️ GoFeedMe</h1>
+        <h1 className="text-3xl font-bold mb-2 text-gray-800">🍽️ GoFeedMe</h1>
         <p className="text-gray-600 mb-8">Elegí tu almuerzo de hoy</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -139,7 +149,7 @@ export default function Home() {
 
         {message && (
           <div className={`mt-4 p-4 rounded text-center font-medium ${
-            message.includes('Error') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+            isError ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
           }`}>
             {message}
           </div>

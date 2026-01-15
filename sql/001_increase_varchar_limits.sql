@@ -1,0 +1,3 @@
+-- Aumentar límites de campos VARCHAR
+ALTER TABLE orders ALTER COLUMN time TYPE VARCHAR(50);
+ALTER TABLE config ALTER COLUMN status TYPE VARCHAR(50);

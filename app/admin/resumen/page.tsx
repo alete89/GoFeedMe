@@ -1,37 +1,37 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export default function AdminSummaryPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersOpen, setOrdersOpen] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadOrders();
-    loadStatus();
-  }, []);
-
   const loadOrders = async () => {
     setLoading(true);
-    const res = await fetch('/api/orders');
+    const res = await fetch("/api/orders");
     const data = await res.json();
     if (data.success) setOrders(data.data);
     setLoading(false);
   };
 
   const loadStatus = async () => {
-    const res = await fetch('/api/status');
+    const res = await fetch("/api/status");
     const data = await res.json();
-    if (data.success) setOrdersOpen(data.data.status === 'open');
+    if (data.success) setOrdersOpen(data.data.status === "open");
   };
+
+  useEffect(() => {
+    loadOrders();
+    loadStatus();
+  }, []);
 
   const toggleOrders = async () => {
     const newStatus = !ordersOpen;
-    await fetch('/api/status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus ? 'open' : 'closed' })
+    await fetch("/api/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus ? "open" : "closed" }),
     });
     setOrdersOpen(newStatus);
   };
@@ -49,16 +49,13 @@ export default function AdminSummaryPage() {
 
         <div className="flex justify-between items-center p-4 bg-gray-50 rounded mb-8">
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={ordersOpen}
-              onChange={toggleOrders}
-              className="w-5 h-5"
-            />
-            <span className={`font-bold px-4 py-2 rounded ${
-              ordersOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              Pedidos {ordersOpen ? 'ABIERTOS' : 'CERRADOS'}
+            <input type="checkbox" checked={ordersOpen} onChange={toggleOrders} className="w-5 h-5" />
+            <span
+              className={`font-bold px-4 py-2 rounded ${
+                ordersOpen ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}
+            >
+              Pedidos {ordersOpen ? "ABIERTOS" : "CERRADOS"}
             </span>
           </label>
           <button
@@ -66,7 +63,7 @@ export default function AdminSummaryPage() {
             disabled={loading}
             className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-600 disabled:bg-gray-300"
           >
-            {loading ? 'Actualizando...' : '🔄 Actualizar'}
+            {loading ? "Actualizando..." : "🔄 Actualizar"}
           </button>
         </div>
 
@@ -106,8 +103,12 @@ export default function AdminSummaryPage() {
         </div>
 
         <div className="pt-6 border-t flex gap-4">
-          <a href="/admin/menu" className="text-green-500 hover:underline">Cargar Nuevo Menú</a>
-          <a href="/" className="text-green-500 hover:underline">Ver Menú</a>
+          <a href="/admin/menu" className="text-green-500 hover:underline">
+            Cargar Nuevo Menú
+          </a>
+          <a href="/" className="text-green-500 hover:underline">
+            Ver Menú
+          </a>
         </div>
       </div>
     </div>
