@@ -1,0 +1,115 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+export default function AdminSummaryPage() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersOpen, setOrdersOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadOrders();
+    loadStatus();
+  }, []);
+
+  const loadOrders = async () => {
+    setLoading(true);
+    const res = await fetch('/api/orders');
+    const data = await res.json();
+    if (data.success) setOrders(data.data);
+    setLoading(false);
+  };
+
+  const loadStatus = async () => {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    if (data.success) setOrdersOpen(data.data.status === 'open');
+  };
+
+  const toggleOrders = async () => {
+    const newStatus = !ordersOpen;
+    await fetch('/api/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus ? 'open' : 'closed' })
+    });
+    setOrdersOpen(newStatus);
+  };
+
+  const groupedOrders = orders.reduce((acc, order) => {
+    if (!acc[order.dish]) acc[order.dish] = [];
+    acc[order.dish].push(order);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  return (
+    <div className="max-w-6xl mx-auto p-8">
+      <div className="bg-white rounded-lg shadow p-8">
+        <h1 className="text-3xl font-bold mb-6">📋 Resumen de Pedidos</h1>
+
+        <div className="flex justify-between items-center p-4 bg-gray-50 rounded mb-8">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={ordersOpen}
+              onChange={toggleOrders}
+              className="w-5 h-5"
+            />
+            <span className={`font-bold px-4 py-2 rounded ${
+              ordersOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              Pedidos {ordersOpen ? 'ABIERTOS' : 'CERRADOS'}
+            </span>
+          </label>
+          <button
+            onClick={loadOrders}
+            disabled={loading}
+            className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-600 disabled:bg-gray-300"
+          >
+            {loading ? 'Actualizando...' : '🔄 Actualizar'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="text-center p-6 bg-gray-50 rounded border-2">
+            <div className="text-5xl font-bold text-green-500">{orders.length}</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wide mt-2">Total de pedidos</div>
+          </div>
+          <div className="text-center p-6 bg-gray-50 rounded border-2">
+            <div className="text-5xl font-bold text-green-500">{Object.keys(groupedOrders).length}</div>
+            <div className="text-sm text-gray-600 uppercase tracking-wide mt-2">Platos diferentes</div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Pedidos agrupados por plato</h2>
+          {Object.keys(groupedOrders).length === 0 ? (
+            <p className="text-center py-8 text-gray-400 italic">No hay pedidos aún</p>
+          ) : (
+            Object.entries(groupedOrders).map(([dish, dishOrders]) => (
+              <div key={dish} className="mb-4 p-4 bg-gray-50 rounded border-l-4 border-green-500">
+                <h3 className="font-bold mb-3">
+                  {dish} <span className="text-green-500">({dishOrders.length})</span>
+                </h3>
+                <ul className="space-y-2">
+                  {dishOrders.map((order: any) => (
+                    <li key={order.id} className="flex justify-between pb-2 border-b last:border-0">
+                      <span className="font-semibold">{order.name}</span>
+                      {order.observations && <span className="text-gray-600 italic mx-4">{order.observations}</span>}
+                      <span className="text-gray-400 text-sm">{order.time}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="pt-6 border-t flex gap-4">
+          <a href="/admin/menu" className="text-green-500 hover:underline">Cargar Nuevo Menú</a>
+          <a href="/" className="text-green-500 hover:underline">Ver Menú</a>
+        </div>
+      </div>
+    </div>
+  );
+}
