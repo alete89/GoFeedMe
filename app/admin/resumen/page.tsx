@@ -86,7 +86,7 @@ export default function AdminSummaryPage() {
           {Object.keys(groupedOrders).length === 0 ? (
             <p className="text-center py-8 text-gray-400 italic">No hay pedidos aún</p>
           ) : (
-            Object.entries(groupedOrders).map(([dish, dishOrders]) => (
+            (Object.entries(groupedOrders) as [string, any[]][]).map(([dish, dishOrders]) => (
               <div key={dish} className="mb-4 p-4 bg-gray-50 rounded border-l-4 border-green-500">
                 <h3 className="font-bold mb-3">
                   {dish} <span className="text-green-500">({dishOrders.length})</span>
