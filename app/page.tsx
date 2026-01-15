@@ -66,7 +66,7 @@ export default function Home() {
     return (
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-lg shadow p-8 text-center">
-          <h1 className="text-3xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
+          <h1 className="text-4xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
           <h2 className="text-2xl font-bold text-red-500 mb-2">Pedidos cerrados</h2>
           <p className="text-gray-600 mb-4">Ya no se pueden hacer más pedidos hoy.</p>
           <a 
@@ -84,7 +84,7 @@ export default function Home() {
     return (
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-lg shadow p-8">
-          <h1 className="text-3xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
+          <h1 className="text-4xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
           <div className="text-center p-8 bg-gray-50 rounded border-2 border-dashed border-gray-300">
             <h2 className="text-xl font-bold mb-4 text-gray-800">📋 No hay menú cargado todavía</h2>
             <p className="text-gray-600 mb-2">Parece que aún no se cargó el menú del día.</p>
@@ -101,7 +101,7 @@ export default function Home() {
     <div className="max-w-2xl mx-auto p-8">
       <div className="bg-white rounded-lg shadow p-8">
         <div className="flex justify-between items-center mb-2">
-          <h1 className="text-3xl font-bold text-gray-800">🍽️ GoFeedMe</h1>
+          <h1 className="text-4xl font-bold text-gray-800">🍽️ GoFeedMe</h1>
           <a 
             href="/admin/resumen" 
             className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
