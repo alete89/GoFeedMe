@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMenu, saveMenu } from '@/lib/db';
+import { getMenu, saveMenu, getUniqueMenus } from '@/lib/db';
 import { parseMenu } from '@/lib/menuParser';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const action = searchParams.get('action');
     
+    if (action === 'unique') {
+      const menus = await getUniqueMenus();
+      return NextResponse.json({ success: true, data: menus });
+    }
+    
+    const date = searchParams.get('date') || new Date().toISOString().split('T')[0];
     const menu = await getMenu(date);
     
     return NextResponse.json({ success: true, data: menu });
@@ -21,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { menuText, date } = body;
+    const { menuText, date, menuName } = body;
     
     if (!menuText) {
       return NextResponse.json(
@@ -33,7 +39,7 @@ export async function POST(request: NextRequest) {
     const currentDate = date || new Date().toISOString().split('T')[0];
     const parsedMenu = parseMenu(menuText);
     
-    await saveMenu(currentDate, parsedMenu);
+    await saveMenu(currentDate, parsedMenu, menuName);
     
     return NextResponse.json({
       success: true,

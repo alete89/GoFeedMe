@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS menus (
   id SERIAL PRIMARY KEY,
-  date DATE UNIQUE NOT NULL,
+  date DATE NOT NULL,
   menu_json JSONB NOT NULL,
+  menu_name VARCHAR(100),
   created_at TIMESTAMP DEFAULT NOW()
 );
 

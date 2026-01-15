@@ -11,7 +11,7 @@ export async function getMenu(date: string) {
       SELECT menu_json 
       FROM menus 
       WHERE date = ${date}
-      ORDER BY created_at DESC 
+      ORDER BY id DESC
       LIMIT 1
     `;
     return result.rows[0]?.menu_json || null;
@@ -21,12 +21,10 @@ export async function getMenu(date: string) {
   }
 }
 
-export async function saveMenu(date: string, menuJson: MenuJson) {
+export async function saveMenu(date: string, menuJson: MenuJson, menuName?: string) {
   await sql`
-    INSERT INTO menus (date, menu_json)
-    VALUES (${date}, ${JSON.stringify(menuJson)})
-    ON CONFLICT (date) 
-    DO UPDATE SET menu_json = ${JSON.stringify(menuJson)}, created_at = NOW()
+    INSERT INTO menus (date, menu_json, menu_name)
+    VALUES (${date}, ${JSON.stringify(menuJson)}, ${menuName || null})
   `;
 }
 
@@ -72,4 +70,20 @@ export async function setOrdersStatus(date: string, status: 'open' | 'closed') {
     ON CONFLICT (date) 
     DO UPDATE SET status = ${status}, updated_at = NOW()
   `;
+}
+
+export async function getUniqueMenus() {
+  try {
+    const result = await sql`
+      SELECT DISTINCT ON (menu_json) 
+        date, menu_json, menu_name, created_at
+      FROM menus 
+      ORDER BY menu_json, date DESC
+      LIMIT 20
+    `;
+    return result.rows;
+  } catch (error) {
+    console.error('Error getting unique menus:', error);
+    return [];
+  }
 }
