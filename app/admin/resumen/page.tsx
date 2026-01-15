@@ -6,6 +6,7 @@ export default function AdminSummaryPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersOpen, setOrdersOpen] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [copyMessage, setCopyMessage] = useState('');
 
   const loadOrders = async () => {
     setLoading(true);
@@ -36,6 +37,27 @@ export default function AdminSummaryPage() {
     setOrdersOpen(newStatus);
   };
 
+  const copyToClipboard = () => {
+    // Agrupar pedidos considerando las observaciones
+    const orderMap = new Map<string, number>();
+    
+    orders.forEach(order => {
+      const key = order.observations 
+        ? `${order.dish} (${order.observations})`
+        : order.dish;
+      orderMap.set(key, (orderMap.get(key) || 0) + 1);
+    });
+
+    // Formatear el texto
+    const text = Array.from(orderMap.entries())
+      .map(([key, count]) => `${count}x ${key}`)
+      .join('\n');
+
+    navigator.clipboard.writeText(text);
+    setCopyMessage('¡Pedidos copiados al clipboard!');
+    setTimeout(() => setCopyMessage(''), 3000);
+  };
+
   const groupedOrders = orders.reduce((acc, order) => {
     if (!acc[order.dish]) acc[order.dish] = [];
     acc[order.dish].push(order);
@@ -58,14 +80,28 @@ export default function AdminSummaryPage() {
               Pedidos {ordersOpen ? "ABIERTOS" : "CERRADOS"}
             </span>
           </label>
-          <button
-            onClick={loadOrders}
-            disabled={loading}
-            className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-600 disabled:bg-gray-300"
-          >
-            {loading ? "Actualizando..." : "🔄 Actualizar"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={copyToClipboard}
+              className="py-2 px-4 bg-blue-500 text-white font-bold rounded hover:bg-blue-600"
+            >
+              📋 Copiar pedidos
+            </button>
+            <button
+              onClick={loadOrders}
+              disabled={loading}
+              className="py-2 px-4 bg-green-500 text-white font-bold rounded hover:bg-green-600 disabled:bg-gray-300"
+            >
+              {loading ? "Actualizando..." : "🔄 Actualizar"}
+            </button>
+          </div>
         </div>
+
+        {copyMessage && (
+          <div className="mb-4 p-4 rounded text-center font-medium bg-green-100 text-green-800">
+            {copyMessage}
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="text-center p-6 bg-gray-50 rounded border-2">
