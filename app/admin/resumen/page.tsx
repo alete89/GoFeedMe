@@ -1,9 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+
+export const dynamic = 'force-dynamic';
+
+interface Order {
+  id: number;
+  date: string;
+  time: string;
+  name: string;
+  dish: string;
+  observations?: string;
+  created_at: string;
+}
 
 export default function AdminSummaryPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [ordersOpen, setOrdersOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
@@ -62,7 +75,7 @@ export default function AdminSummaryPage() {
     if (!acc[order.dish]) acc[order.dish] = [];
     acc[order.dish].push(order);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, Order[]>);
 
   return (
     <div className="max-w-6xl mx-auto p-8">
@@ -115,13 +128,13 @@ export default function AdminSummaryPage() {
           {Object.keys(groupedOrders).length === 0 ? (
             <p className="text-center py-8 text-gray-400 italic">No hay pedidos aún</p>
           ) : (
-            (Object.entries(groupedOrders) as [string, any[]][]).map(([dish, dishOrders]) => (
+            (Object.entries(groupedOrders) as [string, Order[]][]).map(([dish, dishOrders]) => (
               <div key={dish} className="mb-4 p-4 bg-gray-50 rounded border-l-4 border-green-500">
                 <h3 className="font-bold mb-3">
                   {dish} <span className="text-green-500">({dishOrders.length})</span>
                 </h3>
                 <ul className="space-y-2">
-                  {dishOrders.map((order: any) => (
+                  {dishOrders.map((order: Order) => (
                     <li key={order.id} className="flex justify-between pb-2 border-b last:border-0">
                       <span className="font-semibold">{order.name}</span>
                       {order.observations && <span className="text-gray-600 italic mx-4">{order.observations}</span>}
@@ -135,12 +148,12 @@ export default function AdminSummaryPage() {
         </div>
 
         <div className="pt-6 border-t flex gap-4">
-          <a href="/admin/menu" className="text-green-500 hover:underline">
+          <Link href="/admin/menu" className="text-green-500 hover:underline">
             Cargar Nuevo Menú
-          </a>
-          <a href="/" className="text-green-500 hover:underline">
+          </Link>
+          <Link href="/" className="text-green-500 hover:underline">
             Ver Menú
-          </a>
+          </Link>
         </div>
       </div>
     </div>

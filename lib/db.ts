@@ -1,6 +1,10 @@
 import 'server-only';
 import { sql } from '@vercel/postgres';
 
+interface MenuJson {
+  categories: { name: string; dishes: string[] }[];
+}
+
 export async function getMenu(date: string) {
   try {
     const result = await sql`
@@ -17,7 +21,7 @@ export async function getMenu(date: string) {
   }
 }
 
-export async function saveMenu(date: string, menuJson: any) {
+export async function saveMenu(date: string, menuJson: MenuJson) {
   await sql`
     INSERT INTO menus (date, menu_json)
     VALUES (${date}, ${JSON.stringify(menuJson)})
