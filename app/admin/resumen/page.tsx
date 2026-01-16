@@ -20,6 +20,7 @@ export default function AdminSummaryPage() {
   const [ordersOpen, setOrdersOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [copyMessage, setCopyMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const loadOrders = async () => {
     setLoading(true);
@@ -48,6 +49,29 @@ export default function AdminSummaryPage() {
       body: JSON.stringify({ status: newStatus ? "open" : "closed" }),
     });
     setOrdersOpen(newStatus);
+  };
+
+  const deleteOrder = async (orderId: number, personName: string) => {
+    if (!confirm(`¿Estás seguro de borrar el pedido de ${personName}?`)) {
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/orders?id=${orderId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        await loadOrders();
+      } else {
+        setErrorMessage('Error al borrar el pedido');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
+      setErrorMessage('Error al borrar el pedido');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
   };
 
   const copyToClipboard = () => {
@@ -116,6 +140,12 @@ export default function AdminSummaryPage() {
           </div>
         )}
 
+        {errorMessage && (
+          <div className="mb-4 p-4 rounded text-center font-medium bg-red-100 text-red-800">
+            {errorMessage}
+          </div>
+        )}
+
         <div className="mb-8">
           <div className="text-center p-6 bg-gray-50 rounded border-2">
             <div className="text-5xl font-bold text-green-500">{orders.length}</div>
@@ -135,8 +165,17 @@ export default function AdminSummaryPage() {
                 </h3>
                 <ul className="space-y-2">
                   {dishOrders.map((order: Order) => (
-                    <li key={order.id} className="flex justify-between pb-2 border-b last:border-0">
-                      <span className="font-semibold">{order.name}</span>
+                    <li key={order.id} className="flex justify-between items-center pb-2 border-b last:border-0">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => deleteOrder(order.id, order.name)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                          title="Borrar pedido"
+                        >
+                          🗑️
+                        </button>
+                        <span className="font-semibold">{order.name}</span>
+                      </div>
                       {order.observations && <span className="text-gray-600 italic mx-4">{order.observations}</span>}
                       <span className="text-gray-400 text-sm">{order.time}</span>
                     </li>
