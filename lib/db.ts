@@ -72,6 +72,13 @@ export async function setOrdersStatus(date: string, status: 'open' | 'closed') {
   `;
 }
 
+export async function deleteOrder(orderId: number) {
+  await sql`
+    DELETE FROM orders 
+    WHERE id = ${orderId}
+  `;
+}
+
 export async function getUniqueMenus() {
   try {
     const result = await sql`

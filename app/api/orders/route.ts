@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, saveOrder } from '@/lib/db';
+import { getOrders, saveOrder, deleteOrder } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,6 +42,29 @@ export async function POST(request: NextRequest) {
       dish,
       observations
     });
+    
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const orderId = searchParams.get('id');
+    
+    if (!orderId) {
+      return NextResponse.json(
+        { success: false, error: 'Order ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    await deleteOrder(parseInt(orderId));
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
