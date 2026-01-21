@@ -6,9 +6,14 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
+interface Dish {
+  name: string;
+  description: string;
+}
+
 interface PreviousMenu {
   id: number;
-  menu_json: { categories: { name: string; dishes: string[] }[] };
+  menu_json: { categories: { name: string; dishes: Dish[] }[] };
   menu_name: string;
   created_at: string;
 }
@@ -59,7 +64,9 @@ export default function AdminMenuPage() {
     const text = menu.menu_json.categories
       .map((cat) => {
         const categoryLine = cat.name;
-        const dishes = cat.dishes.join('\n');
+        const dishes = cat.dishes
+          .map((dish) => `${dish.name}\n${dish.description}`)
+          .join('\n');
         return `${categoryLine}\n${dishes}`;
       })
       .join('\n');

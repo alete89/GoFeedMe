@@ -1,33 +1,62 @@
+export interface Dish {
+  name: string;
+  description: string;
+}
+
 export interface SimpleMenu {
   categories: {
     name: string;
-    dishes: string[];
+    dishes: Dish[];
   }[];
 }
 
 export function parseMenu(menuText: string): SimpleMenu {
   const lines = menuText.split('\n').filter(line => line.trim());
   
-  const categories: { name: string; dishes: string[] }[] = [];
-  let currentCategory: { name: string; dishes: string[] } | null = null;
+  const categories: { name: string; dishes: Dish[] }[] = [];
+  let currentCategory: { name: string; dishes: Dish[] } | null = null;
+  let currentDish: Dish | null = null;
 
-  for (const line of lines) {
-    const trimmedLine = line.trim();
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
     
-    if (isCategory(trimmedLine)) {
+    if (isCategory(line)) {
+      // Nueva categoría
       if (currentCategory) {
+        if (currentDish) {
+          currentCategory.dishes.push(currentDish);
+          currentDish = null;
+        }
         categories.push(currentCategory);
       }
       currentCategory = {
-        name: trimmedLine,
+        name: line,
         dishes: []
       };
     }
-    else if (isDishName(trimmedLine) && currentCategory) {
-      currentCategory.dishes.push(trimmedLine);
+    else if (isDishName(line) && currentCategory) {
+      // Nuevo plato
+      if (currentDish) {
+        currentCategory.dishes.push(currentDish);
+      }
+      currentDish = {
+        name: line,
+        description: ''
+      };
+    }
+    else if (currentDish && line.length > 0) {
+      // Descripción del plato actual
+      if (currentDish.description) {
+        currentDish.description += ' ';
+      }
+      currentDish.description += line;
     }
   }
 
+  // Agregar el último plato y categoría
+  if (currentDish && currentCategory) {
+    currentCategory.dishes.push(currentDish);
+  }
   if (currentCategory) {
     categories.push(currentCategory);
   }

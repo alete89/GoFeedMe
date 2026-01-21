@@ -4,8 +4,13 @@ import { useState, useEffect } from 'react';
 
 export const dynamic = 'force-dynamic';
 
+interface Dish {
+  name: string;
+  description: string;
+}
+
 interface Menu {
-  categories: { name: string; dishes: string[] }[];
+  categories: { name: string; dishes: Dish[] }[];
 }
 
 export default function Home() {
@@ -37,6 +42,13 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!selectedDish) {
+      setMessage('Por favor seleccioná un plato');
+      setIsError(true);
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await fetch('/api/orders', {
@@ -126,21 +138,35 @@ export default function Home() {
 
           <div>
             <label className="block font-semibold mb-2">Elegí tu plato:</label>
-            <select
-              value={selectedDish}
-              onChange={(e) => setSelectedDish(e.target.value)}
-              required
-              className="w-full p-3 border-2 rounded focus:border-green-500 outline-none"
-            >
-              <option value="">-- Seleccioná un plato --</option>
+            <div className="space-y-2">
               {menu.categories.map((cat) => (
-                <optgroup key={cat.name} label={cat.name}>
-                  {cat.dishes.map((dish) => (
-                    <option key={dish} value={dish}>{dish}</option>
-                  ))}
-                </optgroup>
+                <div key={cat.name}>
+                  <h3 className="font-bold text-lg mb-2 text-gray-700">{cat.name}</h3>
+                  <div className="space-y-2 mb-4">
+                    {cat.dishes.map((dish) => (
+                      <button
+                        key={dish.name}
+                        type="button"
+                        onClick={() => setSelectedDish(dish.name)}
+                        className={`w-full text-left p-4 border-2 rounded transition-all ${
+                          selectedDish === dish.name
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-900">{dish.name}</div>
+                        {dish.description && (
+                          <div className="text-sm text-gray-600 mt-1">{dish.description}</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </select>
+            </div>
+            {!selectedDish && (
+              <p className="text-sm text-red-500 mt-2">* Seleccioná un plato para continuar</p>
+            )}
           </div>
 
           <div>
