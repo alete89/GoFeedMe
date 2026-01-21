@@ -5,18 +5,20 @@ import { useState, useEffect } from 'react';
 export const dynamic = 'force-dynamic';
 
 interface Dish {
+  id: string;
   name: string;
   description: string;
 }
 
 interface Menu {
-  categories: { name: string; dishes: Dish[] }[];
+  categories: { name: string; notes?: string; dishes: Dish[] }[];
 }
 
 export default function Home() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [name, setName] = useState('');
-  const [selectedDish, setSelectedDish] = useState('');
+  const [selectedDishId, setSelectedDishId] = useState('');
+  const [selectedDishName, setSelectedDishName] = useState('');
   const [observations, setObservations] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -43,7 +45,7 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedDish) {
+    if (!selectedDishId) {
       setMessage('Por favor seleccioná un plato');
       setIsError(true);
       return;
@@ -54,14 +56,15 @@ export default function Home() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, dish: selectedDish, observations })
+        body: JSON.stringify({ name, dish: selectedDishName, observations })
       });
       const data = await res.json();
       if (data.success) {
         setMessage('¡Pedido registrado!');
         setIsError(false);
         setName('');
-        setSelectedDish('');
+        setSelectedDishId('');
+        setSelectedDishName('');
         setObservations('');
       } else {
         setMessage(data.error || 'Error al registrar el pedido');
@@ -142,14 +145,22 @@ export default function Home() {
               {menu.categories.map((cat) => (
                 <div key={cat.name}>
                   <h3 className="font-bold text-lg mb-2 text-gray-700">{cat.name}</h3>
+                  {cat.notes && (
+                    <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 text-sm text-blue-800">
+                      <span className="font-medium">ℹ️ </span>{cat.notes}
+                    </div>
+                  )}
                   <div className="space-y-2 mb-4">
                     {cat.dishes.map((dish) => (
                       <button
-                        key={dish.name}
+                        key={dish.id}
                         type="button"
-                        onClick={() => setSelectedDish(dish.name)}
+                        onClick={() => {
+                          setSelectedDishId(dish.id);
+                          setSelectedDishName(dish.name);
+                        }}
                         className={`w-full text-left p-4 border-2 rounded transition-all ${
-                          selectedDish === dish.name
+                          selectedDishId === dish.id
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                         }`}
@@ -164,7 +175,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            {!selectedDish && (
+            {!selectedDishId && (
               <p className="text-sm text-red-500 mt-2">* Seleccioná un plato para continuar</p>
             )}
           </div>

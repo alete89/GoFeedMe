@@ -7,13 +7,14 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 interface Dish {
+  id: string;
   name: string;
   description: string;
 }
 
 interface PreviousMenu {
   id: number;
-  menu_json: { categories: { name: string; dishes: Dish[] }[] };
+  menu_json: { categories: { name: string; notes?: string; dishes: Dish[] }[] };
   menu_name: string;
   created_at: string;
 }
@@ -64,10 +65,11 @@ export default function AdminMenuPage() {
     const text = menu.menu_json.categories
       .map((cat) => {
         const categoryLine = cat.name;
+        const notes = cat.notes ? `${cat.notes}\n` : '';
         const dishes = cat.dishes
           .map((dish) => `${dish.name}\n${dish.description}`)
           .join('\n');
-        return `${categoryLine}\n${dishes}`;
+        return `${categoryLine}\n${notes}${dishes}`;
       })
       .join('\n');
     setMenuText(text);
