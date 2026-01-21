@@ -42,7 +42,7 @@ export default function Home() {
     if (data.success) setOrdersOpen(data.data.status === 'open');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, forceSubmit = false) => {
     e.preventDefault();
     
     if (!selectedDishId) {
@@ -56,16 +56,44 @@ export default function Home() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, dish: selectedDishName, observations })
+        body: JSON.stringify({ 
+          name, 
+          dish: selectedDishName, 
+          observations,
+          force: forceSubmit 
+        })
       });
       const data = await res.json();
+      
       if (data.success) {
-        setMessage('¡Pedido registrado!');
+        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${selectedDishName} fue registrado correctamente.`);
         setIsError(false);
         setName('');
         setSelectedDishId('');
         setSelectedDishName('');
         setObservations('');
+        
+        // Auto-ocultar mensaje después de 5 segundos
+        setTimeout(() => setMessage(''), 5000);
+      } else if (data.error === 'DUPLICATE_NAME') {
+        // Nombre duplicado detectado
+        const confirmed = window.confirm(
+          `⚠️ ATENCIÓN: Ya existe un pedido hoy a nombre de "${data.existingOrder.name}"\n\n` +
+          `Pedido existente: ${data.existingOrder.dish}\n` +
+          `Hora: ${data.existingOrder.time}\n\n` +
+          `Si este pedido NO es tuyo, por favor especificá mejor tu nombre para evitar ambigüedad.\n` +
+          `Por ejemplo: "${name}" → "${name} [Apellido]" o agrega un identificador único.\n\n` +
+          `¿Estás seguro que querés hacer otro pedido con el mismo nombre?`
+        );
+        
+        if (confirmed) {
+          // Reenviar con force=true
+          handleSubmit(e, true);
+          return;
+        } else {
+          setMessage('Pedido cancelado. Por favor cambiá tu nombre para evitar confusión.');
+          setIsError(true);
+        }
       } else {
         setMessage(data.error || 'Error al registrar el pedido');
         setIsError(true);

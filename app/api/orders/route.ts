@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, dish, observations, date } = body;
+    const { name, dish, observations, date, force } = body;
     
     if (!name || !dish) {
       return NextResponse.json(
@@ -30,6 +30,30 @@ export async function POST(request: NextRequest) {
     }
     
     const currentDate = date || new Date().toISOString().split('T')[0];
+    
+    // Verificar si ya existe un pedido con ese nombre hoy (a menos que force=true)
+    if (!force) {
+      const existingOrders = await getOrders(currentDate);
+      const duplicateName = existingOrders.find(
+        (order: any) => order.name.toLowerCase().trim() === name.toLowerCase().trim()
+      );
+      
+      if (duplicateName) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'DUPLICATE_NAME',
+            existingOrder: {
+              name: duplicateName.name,
+              dish: duplicateName.dish,
+              time: duplicateName.time
+            }
+          },
+          { status: 409 }
+        );
+      }
+    }
+    
     const currentTime = new Date().toLocaleTimeString('es-AR', {
       hour: '2-digit',
       minute: '2-digit'
