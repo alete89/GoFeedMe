@@ -4,14 +4,21 @@ import { useState, useEffect } from 'react';
 
 export const dynamic = 'force-dynamic';
 
+interface Dish {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface Menu {
-  categories: { name: string; dishes: string[] }[];
+  categories: { name: string; notes?: string; dishes: Dish[] }[];
 }
 
 export default function Home() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [name, setName] = useState('');
-  const [selectedDish, setSelectedDish] = useState('');
+  const [selectedDishId, setSelectedDishId] = useState('');
+  const [selectedDishName, setSelectedDishName] = useState('');
   const [observations, setObservations] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -37,19 +44,27 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!selectedDishId) {
+      setMessage('Por favor seleccioná un plato');
+      setIsError(true);
+      return;
+    }
+    
     setLoading(true);
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, dish: selectedDish, observations })
+        body: JSON.stringify({ name, dish: selectedDishName, observations })
       });
       const data = await res.json();
       if (data.success) {
         setMessage('¡Pedido registrado!');
         setIsError(false);
         setName('');
-        setSelectedDish('');
+        setSelectedDishId('');
+        setSelectedDishName('');
         setObservations('');
       } else {
         setMessage(data.error || 'Error al registrar el pedido');
@@ -126,21 +141,43 @@ export default function Home() {
 
           <div>
             <label className="block font-semibold mb-2">Elegí tu plato:</label>
-            <select
-              value={selectedDish}
-              onChange={(e) => setSelectedDish(e.target.value)}
-              required
-              className="w-full p-3 border-2 rounded focus:border-green-500 outline-none"
-            >
-              <option value="">-- Seleccioná un plato --</option>
+            <div className="space-y-2">
               {menu.categories.map((cat) => (
-                <optgroup key={cat.name} label={cat.name}>
-                  {cat.dishes.map((dish) => (
-                    <option key={dish} value={dish}>{dish}</option>
-                  ))}
-                </optgroup>
+                <div key={cat.name}>
+                  <h3 className="font-bold text-lg mb-2 text-gray-700">{cat.name}</h3>
+                  {cat.notes && (
+                    <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 text-sm text-blue-800">
+                      <span className="font-medium">ℹ️ </span>{cat.notes}
+                    </div>
+                  )}
+                  <div className="space-y-2 mb-4">
+                    {cat.dishes.map((dish) => (
+                      <button
+                        key={dish.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDishId(dish.id);
+                          setSelectedDishName(dish.name);
+                        }}
+                        className={`w-full text-left p-4 border-2 rounded transition-all ${
+                          selectedDishId === dish.id
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <div className="font-semibold text-gray-900">{dish.name}</div>
+                        {dish.description && (
+                          <div className="text-sm text-gray-600 mt-1">{dish.description}</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </select>
+            </div>
+            {!selectedDishId && (
+              <p className="text-sm text-red-500 mt-2">* Seleccioná un plato para continuar</p>
+            )}
           </div>
 
           <div>

@@ -1,17 +1,24 @@
 import 'server-only';
 import { sql } from '@vercel/postgres';
 
+interface Dish {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface MenuJson {
-  categories: { name: string; dishes: string[] }[];
+  categories: { name: string; notes?: string; dishes: Dish[] }[];
 }
 
 export async function getMenu(date: string) {
   try {
     const result = await sql`
-      SELECT menu_json 
-      FROM menus 
-      WHERE date = ${date}
-      ORDER BY id DESC
+      SELECT mm.menu_json 
+      FROM menus m
+      JOIN master_menus mm ON m.master_menu_id = mm.id
+      WHERE m.date = ${date}
+      ORDER BY m.id DESC
       LIMIT 1
     `;
     return result.rows[0]?.menu_json || null;
@@ -22,9 +29,32 @@ export async function getMenu(date: string) {
 }
 
 export async function saveMenu(date: string, menuJson: MenuJson, menuName?: string) {
+  // Primero, buscar si ya existe un menú maestro con ese contenido
+  const existingMaster = await sql`
+    SELECT id FROM master_menus
+    WHERE menu_json = ${JSON.stringify(menuJson)}
+    LIMIT 1
+  `;
+  
+  let masterMenuId: number;
+  
+  if (existingMaster.rows.length > 0) {
+    // Ya existe, usar el id existente
+    masterMenuId = existingMaster.rows[0].id;
+  } else {
+    // No existe, crear uno nuevo
+    const newMaster = await sql`
+      INSERT INTO master_menus (menu_name, menu_json)
+      VALUES (${menuName || 'Menú sin nombre'}, ${JSON.stringify(menuJson)})
+      RETURNING id
+    `;
+    masterMenuId = newMaster.rows[0].id;
+  }
+  
+  // Insertar la referencia para la fecha específica
   await sql`
-    INSERT INTO menus (date, menu_json, menu_name)
-    VALUES (${date}, ${JSON.stringify(menuJson)}, ${menuName || null})
+    INSERT INTO menus (date, menu_json, menu_name, master_menu_id)
+    VALUES (${date}, ${JSON.stringify(menuJson)}, ${menuName || null}, ${masterMenuId})
   `;
 }
 
@@ -79,18 +109,58 @@ export async function deleteOrder(orderId: number) {
   `;
 }
 
+export async function deleteMasterMenu(masterMenuId: number) {
+  // Primero eliminar todas las referencias en la tabla menus
+  await sql`
+    DELETE FROM menus 
+    WHERE master_menu_id = ${masterMenuId}
+  `;
+  
+  // Luego eliminar el menú maestro
+  await sql`
+    DELETE FROM master_menus 
+    WHERE id = ${masterMenuId}
+  `;
+}
+
 export async function getUniqueMenus() {
   try {
     const result = await sql`
-      SELECT DISTINCT ON (menu_json) 
-        date, menu_json, menu_name, created_at
-      FROM menus 
-      ORDER BY menu_json, date DESC
-      LIMIT 20
+      SELECT id, menu_name, menu_json, created_at
+      FROM master_menus 
+      ORDER BY created_at DESC
+      LIMIT 50
     `;
     return result.rows;
   } catch (error) {
     console.error('Error getting unique menus:', error);
     return [];
   }
+}
+
+export async function getMasterMenu(id: number) {
+  try {
+    const result = await sql`
+      SELECT id, menu_name, menu_json, created_at
+      FROM master_menus
+      WHERE id = ${id}
+      LIMIT 1
+    `;
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Error getting master menu:', error);
+    return null;
+  }
+}
+
+export async function saveMenuFromMaster(date: string, masterMenuId: number) {
+  const masterMenu = await getMasterMenu(masterMenuId);
+  if (!masterMenu) {
+    throw new Error('Master menu not found');
+  }
+  
+  await sql`
+    INSERT INTO menus (date, menu_json, menu_name, master_menu_id)
+    VALUES (${date}, ${JSON.stringify(masterMenu.menu_json)}, ${masterMenu.menu_name}, ${masterMenuId})
+  `;
 }
