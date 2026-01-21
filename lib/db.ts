@@ -1,8 +1,14 @@
 import 'server-only';
 import { sql } from '@vercel/postgres';
 
+interface Dish {
+  id: string;
+  name: string;
+  description: string;
+}
+
 interface MenuJson {
-  categories: { name: string; dishes: string[] }[];
+  categories: { name: string; notes?: string; dishes: Dish[] }[];
 }
 
 export async function getMenu(date: string) {
