@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import * as emoji from 'node-emoji';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,44 +142,36 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <div className="bg-white rounded-lg shadow p-8">
+    <div className="max-w-7xl mx-auto p-4 sm:p-8">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-8">
         <div className="flex justify-between items-center mb-2">
-          <h1 className="text-4xl font-bold text-gray-800">🍽️ GoFeedMe</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">🍽️ GoFeedMe</h1>
           <a 
             href="/admin/resumen" 
             className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
           >
-            Ver resumen de pedidos
+            Ver resumen
           </a>
         </div>
-        <p className="text-gray-600 mb-8">Elegí tu almuerzo de hoy</p>
+        <p className="text-gray-600 mb-6">Elegí tu almuerzo de hoy</p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block font-semibold mb-2">Tu nombre:</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full p-3 border-2 rounded focus:border-green-500 outline-none"
-              placeholder="Ingresá tu nombre"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-2">Elegí tu plato:</label>
-            <div className="space-y-2">
+        {/* Layout en dos columnas */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Columna izquierda: Lista de platos */}
+          <div className="flex-1 md:min-w-0">
+            <label className="block font-semibold mb-3">Elegí tu plato:</label>
+            <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-2">
               {menu.categories.map((cat) => (
                 <div key={cat.name}>
-                  <h3 className="font-bold text-lg mb-2 text-gray-700">{cat.name}</h3>
+                  <h3 className="font-bold text-lg mb-2 text-gray-700 sticky top-0 bg-white pt-2 pb-1">
+                    {emoji.emojify(cat.name)}
+                  </h3>
                   {cat.notes && (
-                    <div className="mb-3 p-3 bg-blue-50 border-l-4 border-blue-400 text-sm text-blue-800">
+                    <div className="mb-2 p-2 bg-blue-50 border-l-4 border-blue-400 text-sm text-blue-800">
                       <span className="font-medium">ℹ️ </span>{cat.notes}
                     </div>
                   )}
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-1.5 mb-3">
                     {cat.dishes.map((dish) => (
                       <button
                         key={dish.id}
@@ -187,15 +180,15 @@ export default function Home() {
                           setSelectedDishId(dish.id);
                           setSelectedDishName(dish.name);
                         }}
-                        className={`w-full text-left p-4 border-2 rounded transition-all ${
+                        className={`w-full text-left p-2.5 border-2 rounded transition-all ${
                           selectedDishId === dish.id
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="font-semibold text-gray-900">{dish.name}</div>
+                        <div className="font-semibold text-gray-900 text-sm sm:text-base">{dish.name}</div>
                         {dish.description && (
-                          <div className="text-sm text-gray-600 mt-1">{dish.description}</div>
+                          <div className="text-xs sm:text-sm text-gray-600 mt-0.5">{dish.description}</div>
                         )}
                       </button>
                     ))}
@@ -208,33 +201,61 @@ export default function Home() {
             )}
           </div>
 
-          <div>
-            <label className="block font-semibold mb-2">Observaciones (opcional):</label>
-            <textarea
-              value={observations}
-              onChange={(e) => setObservations(e.target.value)}
-              rows={3}
-              className="w-full p-3 border-2 rounded focus:border-green-500 outline-none resize-y"
-              placeholder="Ej: sin cebolla, con papas fritas, etc."
-            />
-          </div>
+          {/* Columna derecha: Formulario y acciones */}
+          <div className="md:w-96 md:flex-shrink-0 md:sticky md:top-4 md:h-fit">
+            <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Tu nombre:</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full p-3 border-2 rounded focus:border-green-500 outline-none"
+                  placeholder="Ingresá tu nombre"
+                />
+              </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-green-500 text-white font-bold rounded hover:bg-green-600 disabled:bg-gray-300"
-          >
-            {loading ? 'Registrando...' : 'Hacer Pedido'}
-          </button>
-        </form>
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Plato seleccionado:</label>
+                <div className="p-3 bg-white border-2 border-gray-300 rounded min-h-[48px] flex items-center">
+                  {selectedDishName ? (
+                    <span className="font-medium text-green-700">✓ {selectedDishName}</span>
+                  ) : (
+                    <span className="text-gray-400 text-sm">Ninguno seleccionado</span>
+                  )}
+                </div>
+              </div>
 
-        {message && (
-          <div className={`mt-4 p-4 rounded text-center font-medium ${
-            isError ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-          }`}>
-            {message}
+              <div>
+                <label className="block font-semibold mb-2 text-sm">Observaciones (opcional):</label>
+                <textarea
+                  value={observations}
+                  onChange={(e) => setObservations(e.target.value)}
+                  rows={3}
+                  className="w-full p-3 border-2 rounded focus:border-green-500 outline-none resize-y"
+                  placeholder="Ej: sin cebolla, con papas fritas, etc."
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-green-500 text-white font-bold rounded hover:bg-green-600 disabled:bg-gray-300 transition-colors"
+              >
+                {loading ? 'Registrando...' : 'Hacer Pedido'}
+              </button>
+
+              {message && (
+                <div className={`p-3 rounded text-sm font-medium ${
+                  isError ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                }`}>
+                  {message}
+                </div>
+              )}
+            </form>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
