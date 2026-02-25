@@ -132,26 +132,94 @@ Ver [DEPLOYMENT.md](DEPLOYMENT.md) para instrucciones detalladas de deployment e
 
 ## 📝 Formato del Menú
 
-El parser acepta menús en formato markdown:
+El parser acepta menús en formato markdown estándar. A continuación se detallan todos los elementos soportados:
 
+### Elementos del formato
+
+#### 1. Categorías
+Usar `##` para definir categorías. Se pueden incluir emojis:
 ```markdown
-## Categoría Nombre :emoji:
-
-### PLATO 1
-Descripción del plato
-
-### PLATO 2
-Descripción del plato
-
-## Otra Categoría :emoji:
-
-> Nota informativa sobre la categoría
-
-### OTRO PLATO
-Descripción
+## Ensaladas :green_salad:
+## Platos Principales :stew:
 ```
 
-Ver `ejemplo-menu.md` para un ejemplo completo.
+#### 2. Notas de categoría
+Usar blockquotes (`>`) para agregar notas informativas a la categoría:
+```markdown
+## Pasta :spaghetti:
+
+> Todas las pastas son caseras
+```
+
+#### 3. Opciones de categoría
+Usar blockquotes con listas para definir opciones que se aplican a múltiples platos:
+```markdown
+## Pasta :spaghetti:
+
+> Salsas:
+> - Filetto
+> - Bechamel
+> - Bolognesa
+> - Pesto
+```
+
+#### 4. Platos simples
+Usar `###` para definir platos:
+```markdown
+### POLLO GRILLADO
+Pechuga a la parrilla con guarnición de ensalada mixta
+```
+
+#### 5. Platos con opciones propias
+Agregar una lista inmediatamente después del nombre del plato:
+```markdown
+### MILANESA
+- Ternera
+- Pollo
+- Berenjena
+
+Con lechuga, tomate y mayonesa
+```
+
+#### 6. Platos que usan opciones de categoría
+Agregar un asterisco (`*`) al final del nombre para que use las opciones definidas en la categoría:
+```markdown
+### RAVIOLES*
+- De espinaca y ricota
+- De jamón y queso
+```
+
+En este caso el usuario deberá elegir:
+1. La variante del plato (De espinaca o De jamón)
+2. La salsa de la categoría (Filetto, Bechamel, etc.)
+
+### Ejemplo completo
+
+```markdown
+## Pasta :spaghetti:
+
+> Salsas:
+> - Filetto
+> - Bechamel
+> - Bolognesa
+
+### RAVIOLES*
+- De espinaca y ricota
+- De jamón y queso
+
+### ÑOQUIS*
+- De papa
+- De espinaca
+
+### LASAGNA
+Lasagna de carne con salsa bolognesa casera
+```
+
+**Resultado:**
+- RAVIOLES y ÑOQUIS tendrán radio buttons para elegir variante + salsa
+- LASAGNA solo mostrará la descripción (no usa salsas)
+
+Ver [`ejemplo-menu.md`](ejemplo-menu.md) para un ejemplo completo y funcional.
 
 ## 🤝 Contribuir
 

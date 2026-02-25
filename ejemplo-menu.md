@@ -1,4 +1,4 @@
-## Ensaladas :green_salad:
+## Ensalada :green_salad:
 
 ### VEGETARIANA
 Base de arroz, mix de vegetales asados, hojas verdes, cebolla caramelizada y tomate, con aderezado con vinagreta
@@ -11,7 +11,11 @@ Base de arroz, pollo grillado, hojas verdes, tomate, palta y morrones asados.
 
 ## Sandwich :sandwich:
 
-### MILANESA (TERNERA, POLLO O BERENJENA -elegir 1-
+### MILANESA
+- Ternera
+- Pollo
+- Berenjena
+
 Con lechuga, tomate y mayonesa de morrones asados
 
 ### POLLO GRILLADO
@@ -20,7 +24,7 @@ Con hojas verdes, tomate y palta, aderezado con thousand island.
 ### PULLED PORK
 De bondiola braseada desmenuzada, con cebolla caramelizada y pepinillos | Incluye papas fritas |
 
-## Platos :stew:
+## Plato :stew:
 
 ### POLLO GRILLADO
 Pechuga a la parrilla con guarnición de ensalada mixta, papas fritas o puré de papa.
@@ -50,20 +54,31 @@ Con guarnición de ensalada mixta, papas fritas o puré de papa.
 Con guarnición de ensalada mixta, papas fritas o puré de papa.
 
 ### ARROZ MELOSO (cremoso estilo risotto)
-Con mix de vegetales /o/ Pollo y vegetales /o/ Ternera y vegetales
+- Con mix de vegetales
+- Pollo y vegetales
+- Ternera y vegetales
 
-## Pastas :spaghetti:
+## Pasta :spaghetti:
 
-> Salsas (elegir 1): Filetto, Bechamel, Mixta, Bolognesa, Pesto, Manteca de hierbas
+> Salsas:
+> - Filetto
+> - Bechamel
+> - Mixta
+> - Bolognesa
+> - Pesto
+> - Manteca de hierbas
 
 ### RAVIOLES*
-De espinaca, acelga, ricota y parmesano /o/ De pavita, ricota y jamón
+- De espinaca, acelga, ricota y parmesano
+- De pavita, ricota y jamón
 
 ### SORRENTINOS*
-De cabutia asada, parmesano y mozzarella (v.) /o/ De jamón y queso
+- De cabutia asada, parmesano y mozzarella (v.)
+- De jamón y queso
 
 ### ÑOQUIS*
-De papa y ajo asado /o/ De espinaca
+- De papa y ajo asado
+- De espinaca
 
 ### AGONOLOTTIS DE BONDIOLA
 Rellenos de bondiola BBQ y vegetales braseados, a la crema de verdeo
