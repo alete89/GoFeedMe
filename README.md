@@ -47,10 +47,12 @@ Puedes usar Vercel Postgres, o cualquier base de datos PostgreSQL.
 # 1. Schema inicial
 psql -d tu_database -f sql/schema.sql
 
-# 2. Migraciones
+# 2. Migraciones (si actualizas una DB existente)
 psql -d tu_database -f sql/001_increase_varchar_limits.sql
 psql -d tu_database -f sql/002_add_menu_name.sql
 psql -d tu_database -f sql/003_remove_date_unique.sql
+psql -d tu_database -f sql/004_create_master_menus.sql
+psql -d tu_database -f sql/005_add_category_to_orders.sql
 ```
 
 ### 3. Configurar variables de entorno

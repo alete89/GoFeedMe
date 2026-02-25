@@ -63,11 +63,12 @@ export async function saveOrder(order: {
   time: string;
   name: string;
   dish: string;
+  category?: string;
   observations?: string;
 }) {
   await sql`
-    INSERT INTO orders (date, time, name, dish, observations)
-    VALUES (${order.date}, ${order.time}, ${order.name}, ${order.dish}, ${order.observations || null})
+    INSERT INTO orders (date, time, name, dish, category, observations)
+    VALUES (${order.date}, ${order.time}, ${order.name}, ${order.dish}, ${order.category || null}, ${order.observations || null})
   `;
 }
 

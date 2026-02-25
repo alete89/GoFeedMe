@@ -5,12 +5,18 @@ import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
+// Helper para limpiar emojis de las categorías (formato :emoji:)
+const cleanCategoryName = (categoryName: string): string => {
+  return categoryName.replace(/\s*:[a-z_]+:\s*/gi, '').trim();
+};
+
 interface Order {
   id: number;
   date: string;
   time: string;
   name: string;
   dish: string;
+  category?: string;
   observations?: string;
   created_at: string;
 }
@@ -79,9 +85,10 @@ export default function AdminSummaryPage() {
     const orderMap = new Map<string, number>();
     
     orders.forEach(order => {
+      const dishWithCategory = order.category ? `${cleanCategoryName(order.category)} ${order.dish}` : order.dish;
       const key = order.observations 
-        ? `${order.dish} (${order.observations})`
-        : order.dish;
+        ? `${dishWithCategory} (${order.observations})`
+        : dishWithCategory;
       orderMap.set(key, (orderMap.get(key) || 0) + 1);
     });
 
@@ -96,8 +103,9 @@ export default function AdminSummaryPage() {
   };
 
   const groupedOrders = orders.reduce((acc, order) => {
-    if (!acc[order.dish]) acc[order.dish] = [];
-    acc[order.dish].push(order);
+    const dishKey = order.category ? `${cleanCategoryName(order.category)} ${order.dish}` : order.dish;
+    if (!acc[dishKey]) acc[dishKey] = [];
+    acc[dishKey].push(order);
     return acc;
   }, {} as Record<string, Order[]>);
 

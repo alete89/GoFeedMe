@@ -5,6 +5,11 @@ import * as emoji from 'node-emoji';
 
 export const dynamic = 'force-dynamic';
 
+// Helper para limpiar emojis de las categorías (formato :emoji:)
+const cleanCategoryName = (categoryName: string): string => {
+  return categoryName.replace(/\s*:[a-z_]+:\s*/gi, '').trim();
+};
+
 interface Dish {
   id: string;
   name: string;
@@ -106,7 +111,8 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name, 
-          dish: fullDishName, 
+          dish: fullDishName,
+          category: selectedCategory?.name ? cleanCategoryName(selectedCategory.name) : undefined,
           observations,
           force: forceSubmit 
         })
@@ -114,7 +120,10 @@ export default function Home() {
       const data = await res.json();
       
       if (data.success) {
-        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${fullDishName} fue registrado correctamente.`);
+        const fullDishNameWithCategory = selectedCategory?.name 
+          ? `${cleanCategoryName(selectedCategory.name)} ${fullDishName}` 
+          : fullDishName;
+        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${fullDishNameWithCategory} fue registrado correctamente.`);
         setIsError(false);
         setName('');
         setSelectedDishId('');
@@ -254,6 +263,10 @@ export default function Home() {
                                   value={option}
                                   checked={selectedDishId === dish.id && selectedOption === option}
                                   onChange={(e) => {
+                                    // Si cambiamos de plato, limpiar la otra opción
+                                    if (dish.id !== selectedDishId) {
+                                      setSelectedCategoryOption('');
+                                    }
                                     setSelectedDishId(dish.id);
                                     setSelectedDishName(dish.name);
                                     setSelectedOption(e.target.value);
@@ -279,6 +292,10 @@ export default function Home() {
                                   value={catOption}
                                   checked={selectedDishId === dish.id && selectedCategoryOption === catOption}
                                   onChange={(e) => {
+                                    // Si cambiamos de plato, limpiar la otra opción
+                                    if (dish.id !== selectedDishId) {
+                                      setSelectedOption('');
+                                    }
                                     setSelectedDishId(dish.id);
                                     setSelectedDishName(dish.name);
                                     setSelectedCategoryOption(e.target.value);
@@ -325,7 +342,13 @@ export default function Home() {
                 <div className="p-3 bg-white border-2 border-gray-300 rounded min-h-[48px] flex items-center">
                   {selectedDishName ? (
                     <span className="font-medium text-green-700">
-                      ✓ {selectedDishName}
+                      ✓ {(() => {
+                        // Buscar la categoría del plato seleccionado
+                        const categoryName = menu?.categories.find(cat => 
+                          cat.dishes.some(d => d.id === selectedDishId)
+                        )?.name;
+                        return categoryName ? `${cleanCategoryName(categoryName)} ${selectedDishName}` : selectedDishName;
+                      })()}
                       {selectedOption && <span className="text-sm"> ({selectedOption})</span>}
                       {selectedCategoryOption && (() => {
                         // Solo mostrar opción de categoría si el plato actual la usa
