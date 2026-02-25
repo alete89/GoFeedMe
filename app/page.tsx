@@ -95,7 +95,7 @@ export default function Home() {
     if (selectedOption) {
       fullDishName += ` (${selectedOption})`;
     }
-    if (selectedCategoryOption) {
+    if (selectedDish?.usesCategoryOptions && selectedCategoryOption) {
       fullDishName += selectedOption ? `, ${selectedCategoryOption}` : ` (${selectedCategoryOption})`;
     }
     
@@ -327,11 +327,17 @@ export default function Home() {
                     <span className="font-medium text-green-700">
                       ✓ {selectedDishName}
                       {selectedOption && <span className="text-sm"> ({selectedOption})</span>}
-                      {selectedCategoryOption && (
-                        <span className="text-sm">
-                          {selectedOption ? `, ${selectedCategoryOption}` : ` (${selectedCategoryOption})`}
-                        </span>
-                      )}
+                      {selectedCategoryOption && (() => {
+                        // Solo mostrar opción de categoría si el plato actual la usa
+                        const currentDish = menu?.categories
+                          .flatMap(cat => cat.dishes)
+                          .find(dish => dish.id === selectedDishId);
+                        return currentDish?.usesCategoryOptions ? (
+                          <span className="text-sm">
+                            {selectedOption ? `, ${selectedCategoryOption}` : ` (${selectedCategoryOption})`}
+                          </span>
+                        ) : null;
+                      })()}
                     </span>
                   ) : (
                     <span className="text-gray-400 text-sm">Ninguno seleccionado</span>

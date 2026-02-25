@@ -26,11 +26,19 @@ De bondiola braseada desmenuzada, con cebolla caramelizada y pepinillos | Incluy
 
 ## Plato :stew:
 
-### POLLO GRILLADO
-Pechuga a la parrilla con guarnición de ensalada mixta, papas fritas o puré de papa.
+> Guarnición:
+> - Ensalada mixta
+> - Papas fritas
+> - Puré de papa
 
-### PECHUGA AL CHAMPIGNON O AL VERDEO*
-Pechuga a la parrilla, servida con crema de hongos o verdeo (a elección) Con guarnición de ensalada mixta, papas fritas o puré de papa.
+### POLLO GRILLADO*
+Pechuga a la parrilla con guarnición.
+
+### PECHUGA*
+- Al Champignon
+- Al Verdeo
+
+Pechuga a la parrilla con guarnición.
 
 ### POLLO CAPRESSE
 Pechuga grillada con mozzarella, tomate y albahaca, con papas españolas
@@ -38,8 +46,11 @@ Pechuga grillada con mozzarella, tomate y albahaca, con papas españolas
 ### TORTILLA DE PAPA
 De papa y cebolla - babe
 
-### FILET DE MERLUZA
-A la romana o en milanesa. Con guarnición de ensalada mixta, papas fritas o puré de papa.
+### FILET DE MERLUZA*
+- A la romana
+- En milanesa
+
+Con guarnición.
 
 ### PASTEL DE PAPA
 De ternera cortada a cuchillo, coronado con puré de papa y queso gratinado
@@ -47,11 +58,11 @@ De ternera cortada a cuchillo, coronado con puré de papa y queso gratinado
 ### PASTEL DE BONDIOLA BRASEADA
 Coronado con puré de batata caramelizado
 
-### MILANESA DE TERNERA
-Con guarnición de ensalada mixta, papas fritas o puré de papa.
+### MILANESA DE TERNERA*
+Con guarnición.
 
-### MILANESA DE POLLO
-Con guarnición de ensalada mixta, papas fritas o puré de papa.
+### MILANESA DE POLLO*
+Con guarnición.
 
 ### ARROZ MELOSO (cremoso estilo risotto)
 - Con mix de vegetales
