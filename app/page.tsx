@@ -5,14 +5,29 @@ import * as emoji from 'node-emoji';
 
 export const dynamic = 'force-dynamic';
 
+// Helper para limpiar emojis de las categorías (formato :emoji:)
+const cleanCategoryName = (categoryName: string): string => {
+  return categoryName.replace(/\s*:[a-z_]+:\s*/gi, '').trim();
+};
+
 interface Dish {
   id: string;
   name: string;
   description: string;
+  options?: string[];
+  usesCategoryOptions?: boolean;
 }
 
 interface Menu {
-  categories: { name: string; notes?: string; dishes: Dish[] }[];
+  categories: { 
+    name: string; 
+    notes?: string; 
+    categoryOptions?: {
+      label: string;
+      options: string[];
+    };
+    dishes: Dish[] 
+  }[];
 }
 
 export default function Home() {
@@ -20,6 +35,8 @@ export default function Home() {
   const [name, setName] = useState('');
   const [selectedDishId, setSelectedDishId] = useState('');
   const [selectedDishName, setSelectedDishName] = useState('');
+  const [selectedOption, setSelectedOption] = useState('');
+  const [selectedCategoryOption, setSelectedCategoryOption] = useState('');
   const [observations, setObservations] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -27,21 +44,21 @@ export default function Home() {
   const [ordersOpen, setOrdersOpen] = useState(true);
 
   useEffect(() => {
+    const loadMenu = async () => {
+      const res = await fetch('/api/menu');
+      const data = await res.json();
+      if (data.success) setMenu(data.data);
+    };
+
+    const checkStatus = async () => {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      if (data.success) setOrdersOpen(data.data.status === 'open');
+    };
+
     loadMenu();
     checkStatus();
   }, []);
-
-  const loadMenu = async () => {
-    const res = await fetch('/api/menu');
-    const data = await res.json();
-    if (data.success) setMenu(data.data);
-  };
-
-  const checkStatus = async () => {
-    const res = await fetch('/api/status');
-    const data = await res.json();
-    if (data.success) setOrdersOpen(data.data.status === 'open');
-  };
 
   const handleSubmit = async (e: React.FormEvent, forceSubmit = false) => {
     e.preventDefault();
@@ -52,6 +69,41 @@ export default function Home() {
       return;
     }
     
+    // Buscar el plato y su categoría
+    let selectedDish: Dish | undefined;
+    let selectedCategory;
+    for (const cat of menu?.categories || []) {
+      const dish = cat.dishes.find(d => d.id === selectedDishId);
+      if (dish) {
+        selectedDish = dish;
+        selectedCategory = cat;
+        break;
+      }
+    }
+    
+    // Validar que si el plato tiene opciones, se haya seleccionado una
+    if (selectedDish?.options && selectedDish.options.length > 0 && !selectedOption) {
+      setMessage('Por favor seleccioná una opción para este plato');
+      setIsError(true);
+      return;
+    }
+    
+    // Validar que si el plato usa opciones de categoría, se haya seleccionado una
+    if (selectedDish?.usesCategoryOptions && selectedCategory?.categoryOptions && !selectedCategoryOption) {
+      setMessage(`Por favor seleccioná ${selectedCategory.categoryOptions.label.toLowerCase()}`);
+      setIsError(true);
+      return;
+    }
+    
+    // Construir el nombre completo del plato con las opciones
+    let fullDishName = selectedDishName;
+    if (selectedOption) {
+      fullDishName += ` (${selectedOption})`;
+    }
+    if (selectedDish?.usesCategoryOptions && selectedCategoryOption) {
+      fullDishName += selectedOption ? `, ${selectedCategoryOption}` : ` (${selectedCategoryOption})`;
+    }
+    
     setLoading(true);
     try {
       const res = await fetch('/api/orders', {
@@ -59,7 +111,8 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name, 
-          dish: selectedDishName, 
+          dish: fullDishName,
+          category: selectedCategory?.name ? cleanCategoryName(selectedCategory.name) : undefined,
           observations,
           force: forceSubmit 
         })
@@ -67,11 +120,16 @@ export default function Home() {
       const data = await res.json();
       
       if (data.success) {
-        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${selectedDishName} fue registrado correctamente.`);
+        const fullDishNameWithCategory = selectedCategory?.name 
+          ? `${cleanCategoryName(selectedCategory.name)} ${fullDishName}` 
+          : fullDishName;
+        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${fullDishNameWithCategory} fue registrado correctamente.`);
         setIsError(false);
         setName('');
         setSelectedDishId('');
         setSelectedDishName('');
+        setSelectedOption('');
+        setSelectedCategoryOption('');
         setObservations('');
         
         // Auto-ocultar mensaje después de 5 segundos
@@ -99,7 +157,7 @@ export default function Home() {
         setMessage(data.error || 'Error al registrar el pedido');
         setIsError(true);
       }
-    } catch (error) {
+    } catch {
       setMessage('Error de conexión. Por favor intentá de nuevo.');
       setIsError(true);
     }
@@ -173,24 +231,87 @@ export default function Home() {
                   )}
                   <div className="space-y-1.5 mb-3">
                     {cat.dishes.map((dish) => (
-                      <button
+                      <div
                         key={dish.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDishId(dish.id);
-                          setSelectedDishName(dish.name);
-                        }}
                         className={`w-full text-left p-2.5 border-2 rounded transition-all ${
                           selectedDishId === dish.id
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-green-300 hover:bg-gray-50'
                         }`}
                       >
-                        <div className="font-semibold text-gray-900 text-sm sm:text-base">{dish.name}</div>
-                        {dish.description && (
-                          <div className="text-xs sm:text-sm text-gray-600 mt-0.5">{dish.description}</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDishId(dish.id);
+                            setSelectedDishName(dish.name);
+                            // Siempre limpiar las opciones al cambiar de plato
+                            setSelectedOption('');
+                            setSelectedCategoryOption('');
+                          }}
+                          className="w-full text-left"
+                        >
+                          <div className="font-semibold text-gray-900 text-sm sm:text-base">{dish.name}</div>
+                        </button>
+                        
+                        {dish.options && dish.options.length > 0 && (
+                          <div className="mt-2 ml-2 space-y-1">
+                            {dish.options.map((option) => (
+                              <label key={option} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`option-${dish.id}`}
+                                  value={option}
+                                  checked={selectedDishId === dish.id && selectedOption === option}
+                                  onChange={(e) => {
+                                    // Si cambiamos de plato, limpiar la otra opción
+                                    if (dish.id !== selectedDishId) {
+                                      setSelectedCategoryOption('');
+                                    }
+                                    setSelectedDishId(dish.id);
+                                    setSelectedDishName(dish.name);
+                                    setSelectedOption(e.target.value);
+                                  }}
+                                  className="w-4 h-4 text-green-500 focus:ring-green-500"
+                                />
+                                <span className="text-sm text-gray-700">{option}</span>
+                              </label>
+                            ))}
+                          </div>
                         )}
-                      </button>
+                        
+                        {dish.usesCategoryOptions && cat.categoryOptions && (
+                          <div className="mt-2 ml-2 space-y-1">
+                            <div className="text-xs font-semibold text-gray-600 mb-1">
+                              {cat.categoryOptions.label}:
+                            </div>
+                            {cat.categoryOptions.options.map((catOption) => (
+                              <label key={catOption} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`cat-option-${dish.id}`}
+                                  value={catOption}
+                                  checked={selectedDishId === dish.id && selectedCategoryOption === catOption}
+                                  onChange={(e) => {
+                                    // Si cambiamos de plato, limpiar la otra opción
+                                    if (dish.id !== selectedDishId) {
+                                      setSelectedOption('');
+                                    }
+                                    setSelectedDishId(dish.id);
+                                    setSelectedDishName(dish.name);
+                                    setSelectedCategoryOption(e.target.value);
+                                  }}
+                                  className="w-4 h-4 text-blue-500 focus:ring-blue-500"
+                                />
+                                <span className="text-sm text-gray-700">{catOption}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {dish.description && (
+                          <div className="text-xs sm:text-sm text-gray-600 mt-2">{dish.description}</div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -220,7 +341,27 @@ export default function Home() {
                 <label className="block font-semibold mb-2 text-sm">Plato seleccionado:</label>
                 <div className="p-3 bg-white border-2 border-gray-300 rounded min-h-[48px] flex items-center">
                   {selectedDishName ? (
-                    <span className="font-medium text-green-700">✓ {selectedDishName}</span>
+                    <span className="font-medium text-green-700">
+                      ✓ {(() => {
+                        // Buscar la categoría del plato seleccionado
+                        const categoryName = menu?.categories.find(cat => 
+                          cat.dishes.some(d => d.id === selectedDishId)
+                        )?.name;
+                        return categoryName ? `${cleanCategoryName(categoryName)} ${selectedDishName}` : selectedDishName;
+                      })()}
+                      {selectedOption && <span className="text-sm"> ({selectedOption})</span>}
+                      {selectedCategoryOption && (() => {
+                        // Solo mostrar opción de categoría si el plato actual la usa
+                        const currentDish = menu?.categories
+                          .flatMap(cat => cat.dishes)
+                          .find(dish => dish.id === selectedDishId);
+                        return currentDish?.usesCategoryOptions ? (
+                          <span className="text-sm">
+                            {selectedOption ? `, ${selectedCategoryOption}` : ` (${selectedCategoryOption})`}
+                          </span>
+                        ) : null;
+                      })()}
+                    </span>
                   ) : (
                     <span className="text-gray-400 text-sm">Ninguno seleccionado</span>
                   )}

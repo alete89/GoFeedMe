@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, dish, observations, date, force } = body;
+    const { name, dish, category, observations, date, force } = body;
     
     if (!name || !dish) {
       return NextResponse.json(
@@ -64,6 +64,7 @@ export async function POST(request: NextRequest) {
       time: currentTime,
       name,
       dish,
+      category,
       observations
     });
     

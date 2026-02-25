@@ -10,11 +10,23 @@ interface Dish {
   id: string;
   name: string;
   description: string;
+  options?: string[];
+  usesCategoryOptions?: boolean;
 }
 
 interface PreviousMenu {
   id: number;
-  menu_json: { categories: { name: string; notes?: string; dishes: Dish[] }[] };
+  menu_json: { 
+    categories: { 
+      name: string; 
+      notes?: string; 
+      categoryOptions?: {
+        label: string;
+        options: string[];
+      };
+      dishes: Dish[] 
+    }[] 
+  };
   menu_name: string;
   created_at: string;
 }
@@ -61,17 +73,28 @@ export default function AdminMenuPage() {
   };
 
   const loadPreviousMenu = (menu: PreviousMenu) => {
-    // Convertir el JSON del menú de vuelta a texto
+    // Convertir el JSON del menú de vuelta a formato markdown
     const text = menu.menu_json.categories
       .map((cat) => {
-        const categoryLine = cat.name;
-        const notes = cat.notes ? `${cat.notes}\n` : '';
+        const categoryLine = `## ${cat.name}`;
+        const notes = cat.notes ? `\n> ${cat.notes}` : '';
+        const categoryOptions = cat.categoryOptions 
+          ? `\n\n> ${cat.categoryOptions.label}:\n` + 
+            cat.categoryOptions.options.map(opt => `> - ${opt}`).join('\n')
+          : '';
         const dishes = cat.dishes
-          .map((dish) => `${dish.name}\n${dish.description}`)
-          .join('\n');
-        return `${categoryLine}\n${notes}${dishes}`;
+          .map((dish) => {
+            const dishTitle = `### ${dish.name}${dish.usesCategoryOptions ? '*' : ''}`;
+            const options = dish.options && dish.options.length > 0 
+              ? '\n' + dish.options.map(opt => `- ${opt}`).join('\n')
+              : '';
+            const description = dish.description ? `\n${dish.description}` : '';
+            return `${dishTitle}${options}${description}`;
+          })
+          .join('\n\n');
+        return `${categoryLine}${notes}${categoryOptions}\n\n${dishes}`;
       })
-      .join('\n');
+      .join('\n\n');
     setMenuText(text);
     setMessage('');
   };

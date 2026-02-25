@@ -33,7 +33,7 @@ Este documento confirma que el repositorio ha sido auditado y está listo para s
 ### Base de Datos ✅
 
 - [x] Scripts SQL sin datos reales o de prueba sensibles
-- [x] No hay datos personales en `ejemplo-menu.txt`
+- [x] No hay datos personales en `ejemplo-menu.md`
 - [x] Migraciones solo contienen estructura, no datos
 
 ### Dependencias ✅

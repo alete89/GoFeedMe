@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS orders (
   time VARCHAR(50) NOT NULL,
   name VARCHAR(255) NOT NULL,
   dish VARCHAR(255) NOT NULL,
+  category VARCHAR(255),
   observations TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -42,6 +43,7 @@ CREATE TABLE IF NOT EXISTS config (
 
 -- Indexes to optimize queries
 CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(date);
+CREATE INDEX IF NOT EXISTS idx_orders_category ON orders(category);
 CREATE INDEX IF NOT EXISTS idx_menus_date ON menus(date);
 CREATE INDEX IF NOT EXISTS idx_config_date ON config(date);
 CREATE INDEX IF NOT EXISTS idx_master_menus_name ON master_menus(menu_name);
