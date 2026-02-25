@@ -61,17 +61,17 @@ export default function AdminMenuPage() {
   };
 
   const loadPreviousMenu = (menu: PreviousMenu) => {
-    // Convertir el JSON del menú de vuelta a texto
+    // Convertir el JSON del menú de vuelta a formato markdown
     const text = menu.menu_json.categories
       .map((cat) => {
-        const categoryLine = cat.name;
-        const notes = cat.notes ? `${cat.notes}\n` : '';
+        const categoryLine = `## ${cat.name}`;
+        const notes = cat.notes ? `\n> ${cat.notes}` : '';
         const dishes = cat.dishes
-          .map((dish) => `${dish.name}\n${dish.description}`)
-          .join('\n');
-        return `${categoryLine}\n${notes}${dishes}`;
+          .map((dish) => `### ${dish.name}\n${dish.description}`)
+          .join('\n\n');
+        return `${categoryLine}${notes}\n\n${dishes}`;
       })
-      .join('\n');
+      .join('\n\n');
     setMenuText(text);
     setMessage('');
   };

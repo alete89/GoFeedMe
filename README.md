@@ -114,7 +114,7 @@ GoFeedMe/
 ├── sql/                    # Scripts SQL
 │   ├── schema.sql         # Schema inicial
 │   └── 00X_*.sql          # Migraciones
-├── ejemplo-menu.txt        # Ejemplo de formato de menú
+├── ejemplo-menu.md         # Ejemplo de formato de menú (markdown)
 └── README.md
 ```
 
@@ -132,21 +132,26 @@ Ver [DEPLOYMENT.md](DEPLOYMENT.md) para instrucciones detalladas de deployment e
 
 ## 📝 Formato del Menú
 
-El parser acepta menús en formato texto simple:
+El parser acepta menús en formato markdown:
 
-```
-Categoría Nombre :emoji:
-PLATO 1
-Descripción del plato
-PLATO 2
+```markdown
+## Categoría Nombre :emoji:
+
+### PLATO 1
 Descripción del plato
 
-Otra Categoría :emoji:
-OTRO PLATO
+### PLATO 2
+Descripción del plato
+
+## Otra Categoría :emoji:
+
+> Nota informativa sobre la categoría
+
+### OTRO PLATO
 Descripción
 ```
 
-Ver `ejemplo-menu.txt` para un ejemplo completo.
+Ver `ejemplo-menu.md` para un ejemplo completo.
 
 ## 🤝 Contribuir
 

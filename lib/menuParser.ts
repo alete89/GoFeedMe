@@ -24,7 +24,7 @@ export function parseMenu(menuText: string): SimpleMenu {
     const line = lines[i].trim();
     
     if (isCategory(line)) {
-      // Nueva categoría
+      // Nueva categoría (## Título)
       if (currentCategory) {
         if (currentDish) {
           currentCategory.dishes.push(currentDish);
@@ -33,34 +33,35 @@ export function parseMenu(menuText: string): SimpleMenu {
         categories.push(currentCategory);
       }
       currentCategory = {
-        name: line,
+        name: extractCategory(line),
         dishes: []
       };
     }
     else if (isDishName(line) && currentCategory) {
-      // Nuevo plato
+      // Nuevo plato (### NOMBRE)
       if (currentDish) {
         currentCategory.dishes.push(currentDish);
       }
+      const dishName = extractDishName(line);
       // Generar ID único usando categoría, nombre y contador
       const categorySlug = currentCategory.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-      const dishSlug = line.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+      const dishSlug = dishName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
       dishCounter++;
       const dishId = `${categorySlug}-${dishSlug}-${dishCounter}`;
       currentDish = {
         id: dishId,
-        name: line,
+        name: dishName,
         description: ''
       };
     }
     else if (isNote(line) && currentCategory && !currentDish) {
-      // Nota de categoría (líneas que empiezan con * o son informativas, antes de cualquier plato)
+      // Nota de categoría (> texto informativo)
       if (currentCategory.notes) {
         currentCategory.notes += ' ';
       } else {
         currentCategory.notes = '';
       }
-      currentCategory.notes += line;
+      currentCategory.notes += extractNote(line);
     }
     else if (currentDish && line.length > 0) {
       // Descripción del plato actual
@@ -83,24 +84,25 @@ export function parseMenu(menuText: string): SimpleMenu {
 }
 
 function isCategory(line: string): boolean {
-  return (line.includes(':') && /^[A-Z]/.test(line)) || 
-         (/^[A-Z][a-z]+ :/.test(line));
+  return line.startsWith('## ') && !line.startsWith('### ');
 }
 
 function isDishName(line: string): boolean {
-  // Remover contenido entre paréntesis para la validación (incluso si no están cerrados)
-  const withoutParentheses = line.replace(/\([^)]*\)?/g, '').trim();
-  const withoutSpecialChars = withoutParentheses.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
-  
-  return withoutSpecialChars.length > 2 && 
-         withoutSpecialChars === withoutSpecialChars.toUpperCase() &&
-         !line.startsWith('*') && 
-         !line.startsWith('-') &&
-         !line.toLowerCase().includes('*salsas');
+  return line.startsWith('### ');
 }
 
 function isNote(line: string): boolean {
-  return line.startsWith('*') || 
-         line.startsWith('-') ||
-         line.toLowerCase().startsWith('*salsas');
+  return line.startsWith('> ');
+}
+
+function extractCategory(line: string): string {
+  return line.replace(/^## /, '');
+}
+
+function extractDishName(line: string): string {
+  return line.replace(/^### /, '');
+}
+
+function extractNote(line: string): string {
+  return line.replace(/^> /, '');
 }
