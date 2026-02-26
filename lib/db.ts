@@ -1,15 +1,6 @@
 import 'server-only';
 import { sql } from '@vercel/postgres';
-
-interface Dish {
-  id: string;
-  name: string;
-  description: string;
-}
-
-interface MenuJson {
-  categories: { name: string; notes?: string; dishes: Dish[] }[];
-}
+import type { Menu } from './types';
 
 export async function getMenu(date: string) {
   try {
@@ -28,7 +19,7 @@ export async function getMenu(date: string) {
   }
 }
 
-export async function saveMenu(date: string, menuJson: MenuJson, menuName?: string) {
+export async function saveMenu(date: string, menuJson: Menu, menuName?: string) {
   // Primero, buscar si ya existe un menú maestro con ese contenido
   const existingMaster = await sql`
     SELECT id FROM master_menus

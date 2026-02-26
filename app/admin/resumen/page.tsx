@@ -1,25 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { formatDishWithCategory } from "@/lib/utils";
+import type { Order } from "@/lib/types";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export const dynamic = 'force-dynamic';
-
-// Helper para limpiar emojis de las categorías (formato :emoji:)
-const cleanCategoryName = (categoryName: string): string => {
-  return categoryName.replace(/\s*:[a-z_]+:\s*/gi, '').trim();
-};
-
-interface Order {
-  id: number;
-  date: string;
-  time: string;
-  name: string;
-  dish: string;
-  category?: string;
-  observations?: string;
-  created_at: string;
-}
 
 export default function AdminSummaryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -85,7 +71,7 @@ export default function AdminSummaryPage() {
     const orderMap = new Map<string, number>();
     
     orders.forEach(order => {
-      const dishWithCategory = order.category ? `${cleanCategoryName(order.category)} ${order.dish}` : order.dish;
+      const dishWithCategory = formatDishWithCategory(order.category, order.dish);
       const key = order.observations 
         ? `${dishWithCategory} (${order.observations})`
         : dishWithCategory;
@@ -103,7 +89,7 @@ export default function AdminSummaryPage() {
   };
 
   const groupedOrders = orders.reduce((acc, order) => {
-    const dishKey = order.category ? `${cleanCategoryName(order.category)} ${order.dish}` : order.dish;
+    const dishKey = formatDishWithCategory(order.category, order.dish);
     if (!acc[dishKey]) acc[dishKey] = [];
     acc[dishKey].push(order);
     return acc;

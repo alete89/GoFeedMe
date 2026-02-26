@@ -1,32 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import type { Dish, Menu } from '@/lib/types';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-interface Dish {
-  id: string;
-  name: string;
-  description: string;
-  options?: string[];
-  usesCategoryOptions?: boolean;
-}
-
 interface PreviousMenu {
   id: number;
-  menu_json: { 
-    categories: { 
-      name: string; 
-      notes?: string; 
-      categoryOptions?: {
-        label: string;
-        options: string[];
-      };
-      dishes: Dish[] 
-    }[] 
-  };
+  menu_json: Menu;
   menu_name: string;
   created_at: string;
 }

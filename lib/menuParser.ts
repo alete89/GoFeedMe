@@ -1,38 +1,14 @@
-export interface Dish {
-  id: string;
-  name: string;
-  description: string;
-  options?: string[];
-  usesCategoryOptions?: boolean;
-}
+import type { Dish, Menu } from './types';
 
-export interface SimpleMenu {
-  categories: {
-    name: string;
-    notes?: string;
-    categoryOptions?: {
-      label: string;
-      options: string[];
-    };
-    dishes: Dish[];
-  }[];
-}
+// Re-export types for backward compatibility
+export type { Dish };
+export type SimpleMenu = Menu;
 
-export function parseMenu(menuText: string): SimpleMenu {
+export function parseMenu(menuText: string): Menu {
   const lines = menuText.split('\n').filter(line => line.trim());
   
-  const categories: { 
-    name: string; 
-    notes?: string; 
-    categoryOptions?: { label: string; options: string[] };
-    dishes: Dish[] 
-  }[] = [];
-  let currentCategory: { 
-    name: string; 
-    notes?: string; 
-    categoryOptions?: { label: string; options: string[] };
-    dishes: Dish[] 
-  } | null = null;
+  const categories: Menu['categories'] = [];
+  let currentCategory: Menu['categories'][number] | null = null;
   let currentDish: Dish | null = null;
   let dishCounter = 0;
 

@@ -1,34 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { cleanCategoryName, formatDishWithCategory } from '@/lib/utils';
+import type { Dish, Menu } from '@/lib/types';
 import * as emoji from 'node-emoji';
+import { useEffect, useState } from 'react';
 
 export const dynamic = 'force-dynamic';
-
-// Helper para limpiar emojis de las categorías (formato :emoji:)
-const cleanCategoryName = (categoryName: string): string => {
-  return categoryName.replace(/\s*:[a-z_]+:\s*/gi, '').trim();
-};
-
-interface Dish {
-  id: string;
-  name: string;
-  description: string;
-  options?: string[];
-  usesCategoryOptions?: boolean;
-}
-
-interface Menu {
-  categories: { 
-    name: string; 
-    notes?: string; 
-    categoryOptions?: {
-      label: string;
-      options: string[];
-    };
-    dishes: Dish[] 
-  }[];
-}
 
 export default function Home() {
   const [menu, setMenu] = useState<Menu | null>(null);
@@ -120,9 +97,7 @@ export default function Home() {
       const data = await res.json();
       
       if (data.success) {
-        const fullDishNameWithCategory = selectedCategory?.name 
-          ? `${cleanCategoryName(selectedCategory.name)} ${fullDishName}` 
-          : fullDishName;
+        const fullDishNameWithCategory = formatDishWithCategory(selectedCategory?.name, fullDishName);
         setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${fullDishNameWithCategory} fue registrado correctamente.`);
         setIsError(false);
         setName('');
@@ -347,7 +322,7 @@ export default function Home() {
                         const categoryName = menu?.categories.find(cat => 
                           cat.dishes.some(d => d.id === selectedDishId)
                         )?.name;
-                        return categoryName ? `${cleanCategoryName(categoryName)} ${selectedDishName}` : selectedDishName;
+                        return formatDishWithCategory(categoryName, selectedDishName);
                       })()}
                       {selectedOption && <span className="text-sm"> ({selectedOption})</span>}
                       {selectedCategoryOption && (() => {
