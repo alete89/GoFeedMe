@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default function Home() {
   const [menu, setMenu] = useState<Menu | null>(null);
+  const [loadingMenu, setLoadingMenu] = useState(true);
   const [name, setName] = useState('');
   const [selectedDishId, setSelectedDishId] = useState('');
   const [selectedDishName, setSelectedDishName] = useState('');
@@ -22,9 +23,13 @@ export default function Home() {
 
   useEffect(() => {
     const loadMenu = async () => {
-      const res = await fetch('/api/menu');
-      const data = await res.json();
-      if (data.success) setMenu(data.data);
+      try {
+        const res = await fetch('/api/menu');
+        const data = await res.json();
+        if (data.success) setMenu(data.data);
+      } finally {
+        setLoadingMenu(false);
+      }
     };
 
     const checkStatus = async () => {
@@ -152,6 +157,20 @@ export default function Home() {
           >
             Ir al resumen (admin)
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadingMenu) {
+    return (
+      <div className="max-w-2xl mx-auto p-8">
+        <div className="bg-white rounded-lg shadow p-8 text-center">
+          <h1 className="text-4xl font-bold mb-4 text-gray-800">🍽️ GoFeedMe</h1>
+          <div className="flex flex-col items-center gap-4 py-8">
+            <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500">Cargando menú...</p>
+          </div>
         </div>
       </div>
     );
