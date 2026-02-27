@@ -365,12 +365,7 @@ async function createHandler(request: Request): Promise<Response> {
   });
 
   await server.connect(transport);
-
-  try {
-    return await transport.handleRequest(request);
-  } finally {
-    await server.close();
-  }
+  return transport.handleRequest(request);
 }
 
 export async function POST(request: Request): Promise<Response> {
