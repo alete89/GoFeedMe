@@ -355,6 +355,11 @@ function registerTools(server: McpServer) {
 }
 
 async function createHandler(request: Request): Promise<Response> {
+  // Log request details for debugging
+  console.log('[MCP]', request.method, new URL(request.url).pathname,
+    'accept:', request.headers.get('accept'),
+    'content-type:', request.headers.get('content-type'));
+
   // Crear server + transport frescos por cada request
   // (el SDK en modo stateless prohíbe reutilizar el mismo transport)
   const server = new McpServer({ name: 'GoFeedMe', version: '1.0.0' });
@@ -372,12 +377,20 @@ export async function POST(request: Request): Promise<Response> {
   return createHandler(request);
 }
 
-// Stateless mode: no server-initiated SSE streams, reject GET/DELETE
+// Stateless mode: open an SSE channel that closes immediately (no server-initiated messages)
 export async function GET(): Promise<Response> {
-  return new Response(
-    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null }),
-    { status: 405, headers: { 'Content-Type': 'application/json' } }
-  );
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    },
+  });
 }
 
 export async function DELETE(): Promise<Response> {
