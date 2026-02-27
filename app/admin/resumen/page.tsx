@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDishWithCategory } from "@/lib/utils";
+import { formatDishWithCategory, formatLocalTime } from "@/lib/utils";
 import type { Order } from "@/lib/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -171,7 +171,7 @@ export default function AdminSummaryPage() {
                         <span className="font-semibold">{order.name}</span>
                       </div>
                       {order.observations && <span className="text-gray-600 italic mx-4">{order.observations}</span>}
-                      <span className="text-gray-400 text-sm">{order.time}</span>
+                      <span className="text-gray-400 text-sm">{formatLocalTime(order.created_at)}</span>
                     </li>
                   ))}
                 </ul>

@@ -16,3 +16,13 @@ export const formatDishWithCategory = (categoryName: string | undefined, dishNam
   }
   return dishName;
 };
+
+// Formatea la hora a la zona horaria local del cliente
+export const formatLocalTime = (utcTimestamp: string): string => {
+  const date = new Date(utcTimestamp);
+  return date.toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    hour12: false 
+  });
+};
