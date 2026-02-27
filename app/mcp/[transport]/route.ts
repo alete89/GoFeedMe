@@ -372,10 +372,17 @@ export async function POST(request: Request): Promise<Response> {
   return createHandler(request);
 }
 
-export async function GET(request: Request): Promise<Response> {
-  return createHandler(request);
+// Stateless mode: no server-initiated SSE streams, reject GET/DELETE
+export async function GET(): Promise<Response> {
+  return new Response(
+    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null }),
+    { status: 405, headers: { 'Content-Type': 'application/json' } }
+  );
 }
 
-export async function DELETE(request: Request): Promise<Response> {
-  return createHandler(request);
+export async function DELETE(): Promise<Response> {
+  return new Response(
+    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null }),
+    { status: 405, headers: { 'Content-Type': 'application/json' } }
+  );
 }
