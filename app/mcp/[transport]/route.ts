@@ -1,10 +1,10 @@
-import { createMcpHandler } from '@vercel/mcp-adapter';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { z } from 'zod';
 import { getMenu, getOrders, getOrdersStatus, saveOrder } from '@/lib/db';
 import type { Category, Dish } from '@/lib/types';
 
-const handler = createMcpHandler(
-  (server) => {
+function registerTools(server: McpServer) {
     // ── Tool 1: Ver el menú del día ──────────────────────────────────
     server.tool(
       'get_menu',
@@ -352,17 +352,35 @@ const handler = createMcpHandler(
         };
       }
     );
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  },
-  {
-    redisUrl: process.env.REDIS_URL || process.env.KV_URL || process.env.kv_REDIS_URL || process.env.kv_KV_URL,
-    basePath: '/mcp',
-    verboseLogs: true,
-  }
-);
+}
 
-export { handler as GET, handler as POST, handler as DELETE };
+async function createHandler(request: Request): Promise<Response> {
+  // Crear server + transport frescos por cada request
+  // (el SDK en modo stateless prohíbe reutilizar el mismo transport)
+  const server = new McpServer({ name: 'GoFeedMe', version: '1.0.0' });
+  registerTools(server);
+
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined, // stateless: cada request es independiente
+  });
+
+  await server.connect(transport);
+
+  try {
+    return await transport.handleRequest(request);
+  } finally {
+    await server.close();
+  }
+}
+
+export async function POST(request: Request): Promise<Response> {
+  return createHandler(request);
+}
+
+export async function GET(request: Request): Promise<Response> {
+  return createHandler(request);
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+  return createHandler(request);
+}
