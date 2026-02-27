@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOrders, saveOrder, deleteOrder } from '@/lib/db';
+import { getOrders, deleteOrder } from '@/lib/db';
+import { placeOrder } from '@/lib/orderService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,55 +21,57 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, dish, category, observations, date, force } = body;
-    
-    if (!name || !dish) {
-      return NextResponse.json(
-        { success: false, error: 'name and dish are required' },
-        { status: 400 }
-      );
-    }
-    
-    const currentDate = date || new Date().toISOString().split('T')[0];
-    
-    // Verificar si ya existe un pedido con ese nombre hoy (a menos que force=true)
-    if (!force) {
-      const existingOrders = await getOrders(currentDate);
-      const duplicateName = existingOrders.find(
-        (order: any) => order.name.toLowerCase().trim() === name.toLowerCase().trim()
-      );
-      
-      if (duplicateName) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'DUPLICATE_NAME',
-            existingOrder: {
-              name: duplicateName.name,
-              dish: duplicateName.dish,
-              time: duplicateName.time
-            }
-          },
-          { status: 409 }
-        );
-      }
-    }
-    
-    const currentTime = new Date().toLocaleTimeString('es-AR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    await saveOrder({
-      date: currentDate,
-      time: currentTime,
+    const { name, dish, option, category_option, category, observations, date, force } = body;
+
+    const result = await placeOrder({
       name,
       dish,
-      category,
-      observations
+      option,
+      category_option,
+      observations,
+      date,
+      force,
     });
-    
-    return NextResponse.json({ success: true });
+
+    if (!result.success) {
+      const statusMap: Record<string, number> = {
+        MISSING_FIELDS: 400,
+        CLOSED: 403,
+        NO_MENU: 404,
+        DISH_NOT_FOUND: 404,
+        OPTION_REQUIRED: 400,
+        INVALID_OPTION: 400,
+        CATEGORY_OPTION_REQUIRED: 400,
+        INVALID_CATEGORY_OPTION: 400,
+        DUPLICATE_NAME: 409,
+      };
+      const status = statusMap[result.errorCode || ''] || 400;
+
+      // Keep backward-compatible response shape for DUPLICATE_NAME
+      if (result.errorCode === 'DUPLICATE_NAME') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: result.errorCode,
+            message: result.error,
+            existingOrder: result.errorData?.existingOrder,
+          },
+          { status }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.errorCode,
+          message: result.error,
+          ...(result.errorData || {}),
+        },
+        { status }
+      );
+    }
+
+    return NextResponse.json({ success: true, order: result.order });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message },

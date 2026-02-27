@@ -1,8 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { z } from 'zod';
-import { getMenu, getOrders, getOrdersStatus, saveOrder } from '@/lib/db';
-import type { Category, Dish } from '@/lib/types';
+import { getMenu, getOrders, getOrdersStatus } from '@/lib/db';
+import { placeOrder } from '@/lib/orderService';
+import { cleanCategoryName } from '@/lib/utils';
+import type { Category } from '@/lib/types';
 
 function registerTools(server: McpServer) {
     // ── Tool 1: Ver el menú del día ──────────────────────────────────
@@ -137,7 +139,9 @@ function registerTools(server: McpServer) {
     // ── Tool 4: Hacer un pedido ──────────────────────────────────────
     server.tool(
       'place_order',
-      'Realizar un pedido de comida. Primero usá get_menu para ver las opciones disponibles y get_orders_status para verificar que los pedidos estén abiertos. El nombre del plato debe coincidir EXACTAMENTE con lo que aparece en el menú.',
+      `Realizar un pedido de comida. Primero usá get_menu para ver las opciones disponibles y get_orders_status para verificar que los pedidos estén abiertos. El nombre del plato debe coincidir EXACTAMENTE con lo que aparece en el menú.
+
+IMPORTANTE: SIEMPRE preguntale al usuario si tiene alguna observación o personalización para su pedido (ej: "sin cebolla", "doble porción", "sin sal", etc.) ANTES de llamar a esta herramienta. Las observaciones son opcionales pero el usuario debe tener la oportunidad de agregarlas.`,
       {
         name: z
           .string()
@@ -163,7 +167,7 @@ function registerTools(server: McpServer) {
           .string()
           .optional()
           .describe(
-            'Observaciones adicionales (ej: "sin sal", "doble porción"). Opcional.'
+            'Observaciones o personalizaciones del pedido (ej: "sin cebolla", "doble porción", "sin sal", "extra queso"). Preguntale SIEMPRE al usuario antes de hacer el pedido.'
           ),
         date: z
           .string()
@@ -177,175 +181,60 @@ function registerTools(server: McpServer) {
           ),
       },
       async ({ name, dish, option, category_option, observations, date, force }) => {
-        const targetDate =
-          date || new Date().toISOString().split('T')[0];
-
-        // Verificar que los pedidos estén abiertos
-        const status = await getOrdersStatus(targetDate);
-        if (status !== 'open') {
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `🔒 Los pedidos para ${targetDate} están cerrados. No se pueden hacer más pedidos.`,
-              },
-            ],
-          };
-        }
-
-        // Obtener el menú y validar el plato
-        const menuData = await getMenu(targetDate);
-        if (!menuData) {
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `No hay menú cargado para ${targetDate}. No se puede hacer el pedido.`,
-              },
-            ],
-          };
-        }
-
-        const categories = (menuData as { categories: Category[] }).categories;
-
-        // Buscar el plato en el menú (case-insensitive)
-        let foundDish: Dish | undefined;
-        let foundCategory: Category | undefined;
-
-        for (const cat of categories) {
-          const match = cat.dishes.find(
-            (d) => d.name.toLowerCase().trim() === dish.toLowerCase().trim()
-          );
-          if (match) {
-            foundDish = match;
-            foundCategory = cat;
-            break;
-          }
-        }
-
-        if (!foundDish || !foundCategory) {
-          // Listar platos disponibles para ayudar al agente
-          const available = categories
-            .flatMap((cat) =>
-              cat.dishes.map((d) => `  • ${d.name} [${cat.name}]`)
-            )
-            .join('\n');
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `❌ El plato "${dish}" no existe en el menú de hoy.\n\nPlatos disponibles:\n${available}`,
-              },
-            ],
-          };
-        }
-
-        // Validar opciones del plato (ej: Milanesa → Ternera/Pollo/Berenjena)
-        if (foundDish.options && foundDish.options.length > 0) {
-          if (!option) {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: `⚠️ El plato "${foundDish.name}" requiere que elijas una opción:\n${foundDish.options.map((o) => `  • ${o}`).join('\n')}\n\nVolvé a llamar a place_order incluyendo el parámetro "option".`,
-                },
-              ],
-            };
-          }
-
-          const validOption = foundDish.options.find(
-            (o) => o.toLowerCase().trim() === option.toLowerCase().trim()
-          );
-          if (!validOption) {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: `❌ "${option}" no es una opción válida para "${foundDish.name}".\n\nOpciones disponibles:\n${foundDish.options.map((o) => `  • ${o}`).join('\n')}`,
-                },
-              ],
-            };
-          }
-        }
-
-        // Validar opciones de categoría (ej: guarnición, salsa)
-        if (foundDish.usesCategoryOptions && foundCategory.categoryOptions) {
-          if (!category_option) {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: `⚠️ El plato "${foundDish.name}" requiere que elijas ${foundCategory.categoryOptions.label.toLowerCase()}:\n${foundCategory.categoryOptions.options.map((o) => `  • ${o}`).join('\n')}\n\nVolvé a llamar a place_order incluyendo el parámetro "category_option".`,
-                },
-              ],
-            };
-          }
-
-          const validCatOption = foundCategory.categoryOptions.options.find(
-            (o) => o.toLowerCase().trim() === category_option.toLowerCase().trim()
-          );
-          if (!validCatOption) {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: `❌ "${category_option}" no es una opción válida para ${foundCategory.categoryOptions.label.toLowerCase()}.\n\nOpciones disponibles:\n${foundCategory.categoryOptions.options.map((o) => `  • ${o}`).join('\n')}`,
-                },
-              ],
-            };
-          }
-        }
-
-        // Verificar duplicados
-        if (!force) {
-          const existingOrders = await getOrders(targetDate);
-          const duplicate = existingOrders.find(
-            (order: Record<string, string>) =>
-              order.name.toLowerCase().trim() ===
-              name.toLowerCase().trim()
-          );
-
-          if (duplicate) {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: `⚠️ Ya existe un pedido de "${duplicate.name}" para hoy: "${duplicate.dish}" (${duplicate.time}). Si querés reemplazarlo, volvé a llamar a place_order con force=true.`,
-                },
-              ],
-            };
-          }
-        }
-
-        // Construir el nombre completo del plato (mismo formato que el frontend)
-        let fullDishName = foundDish.name;
-        if (option) {
-          fullDishName += ` (${option})`;
-        }
-        if (foundDish.usesCategoryOptions && category_option) {
-          fullDishName += option ? `, ${category_option}` : ` (${category_option})`;
-        }
-
-        const currentTime = new Date().toLocaleTimeString('es-AR', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-
-        await saveOrder({
-          date: targetDate,
-          time: currentTime,
+        const result = await placeOrder({
           name,
-          dish: fullDishName,
-          category: foundCategory.name,
+          dish,
+          option,
+          category_option,
           observations,
+          date,
+          force,
         });
 
+        if (!result.success) {
+          let errorText = '';
+          switch (result.errorCode) {
+            case 'CLOSED':
+              errorText = `🔒 ${result.error}`;
+              break;
+            case 'NO_MENU':
+              errorText = result.error!;
+              break;
+            case 'DISH_NOT_FOUND':
+              errorText = `❌ ${result.error}\n\nPlatos disponibles:\n${result.errorData?.availableDishes}`;
+              break;
+            case 'OPTION_REQUIRED':
+              errorText = `⚠️ ${result.error}\n${(result.errorData?.options as string[]).map((o) => `  • ${o}`).join('\n')}\n\nVolvé a llamar a place_order incluyendo el parámetro "option".`;
+              break;
+            case 'INVALID_OPTION':
+              errorText = `❌ ${result.error}\n\nOpciones disponibles:\n${(result.errorData?.options as string[]).map((o) => `  • ${o}`).join('\n')}`;
+              break;
+            case 'CATEGORY_OPTION_REQUIRED':
+              errorText = `⚠️ ${result.error}\n${(result.errorData?.options as string[]).map((o) => `  • ${o}`).join('\n')}\n\nVolvé a llamar a place_order incluyendo el parámetro "category_option".`;
+              break;
+            case 'INVALID_CATEGORY_OPTION':
+              errorText = `❌ ${result.error}\n\nOpciones disponibles:\n${(result.errorData?.options as string[]).map((o) => `  • ${o}`).join('\n')}`;
+              break;
+            case 'DUPLICATE_NAME': {
+              const existing = result.errorData?.existingOrder as { name: string; dish: string; time: string };
+              errorText = `⚠️ Ya existe un pedido de "${existing.name}" para hoy: "${existing.dish}" (${existing.time}). Si querés reemplazarlo, volvé a llamar a place_order con force=true.`;
+              break;
+            }
+            default:
+              errorText = result.error || 'Error desconocido.';
+          }
+          return {
+            content: [{ type: 'text' as const, text: errorText }],
+          };
+        }
+
+        const order = result.order!;
         let confirmation = `✅ Pedido registrado!\n\n`;
-        confirmation += `👤 ${name}\n`;
-        confirmation += `🍽️ ${fullDishName}\n`;
-        confirmation += `📂 ${foundCategory.name}\n`;
-        if (observations) confirmation += `📝 ${observations}\n`;
-        confirmation += `🕐 ${currentTime}`;
+        confirmation += `👤 ${order.name}\n`;
+        confirmation += `🍽️ ${order.dish}\n`;
+        confirmation += `📂 ${order.category}\n`;
+        if (order.observations) confirmation += `📝 ${order.observations}\n`;
+        confirmation += `🕐 ${order.time}`;
 
         return {
           content: [{ type: 'text' as const, text: confirmation }],

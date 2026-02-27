@@ -1,6 +1,6 @@
 'use client';
 
-import { cleanCategoryName, formatDishWithCategory } from '@/lib/utils';
+import { formatDishWithCategory } from '@/lib/utils';
 import type { Dish, Menu } from '@/lib/types';
 import * as emoji from 'node-emoji';
 import { useEffect, useState } from 'react';
@@ -51,7 +51,7 @@ export default function Home() {
       return;
     }
     
-    // Buscar el plato y su categoría
+    // Buscar el plato y su categoría (for UX feedback only)
     let selectedDish: Dish | undefined;
     let selectedCategory;
     for (const cat of menu?.categories || []) {
@@ -63,27 +63,17 @@ export default function Home() {
       }
     }
     
-    // Validar que si el plato tiene opciones, se haya seleccionado una
+    // Basic UX validations (backend validates too)
     if (selectedDish?.options && selectedDish.options.length > 0 && !selectedOption) {
       setMessage('Por favor seleccioná una opción para este plato');
       setIsError(true);
       return;
     }
     
-    // Validar que si el plato usa opciones de categoría, se haya seleccionado una
     if (selectedDish?.usesCategoryOptions && selectedCategory?.categoryOptions && !selectedCategoryOption) {
       setMessage(`Por favor seleccioná ${selectedCategory.categoryOptions.label.toLowerCase()}`);
       setIsError(true);
       return;
-    }
-    
-    // Construir el nombre completo del plato con las opciones
-    let fullDishName = selectedDishName;
-    if (selectedOption) {
-      fullDishName += ` (${selectedOption})`;
-    }
-    if (selectedDish?.usesCategoryOptions && selectedCategoryOption) {
-      fullDishName += selectedOption ? `, ${selectedCategoryOption}` : ` (${selectedCategoryOption})`;
     }
     
     setLoading(true);
@@ -93,8 +83,9 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name, 
-          dish: fullDishName,
-          category: selectedCategory?.name ? cleanCategoryName(selectedCategory.name) : undefined,
+          dish: selectedDishName,
+          option: selectedOption || undefined,
+          category_option: selectedCategoryOption || undefined,
           observations,
           force: forceSubmit 
         })
@@ -102,8 +93,11 @@ export default function Home() {
       const data = await res.json();
       
       if (data.success) {
-        const fullDishNameWithCategory = formatDishWithCategory(selectedCategory?.name, fullDishName);
-        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${fullDishNameWithCategory} fue registrado correctamente.`);
+        const orderDish = data.order?.dish || selectedDishName;
+        const orderCategory = data.order?.category;
+        const displayName = orderCategory && orderCategory !== 'Plato' && orderCategory !== 'Pasta'
+          ? `${orderCategory} ${orderDish}` : orderDish;
+        setMessage(`✅ ¡Listo, ${name}! Tu pedido de ${displayName} fue registrado correctamente.`);
         setIsError(false);
         setName('');
         setSelectedDishId('');
@@ -134,7 +128,7 @@ export default function Home() {
           setIsError(true);
         }
       } else {
-        setMessage(data.error || 'Error al registrar el pedido');
+        setMessage(data.message || data.error || 'Error al registrar el pedido');
         setIsError(true);
       }
     } catch {
