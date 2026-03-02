@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifySlackRequest, processSlackEvent } from '@/lib/slack';
+import { verifySlackRequest, processSlackEvent, processSlackSlashCommand } from '@/lib/slack';
 
 /**
  * Slack Events API webhook.
@@ -33,30 +33,14 @@ export async function POST(request: Request) {
     const command = params.get('command');
     const text = params.get('text') || '';
     const userName = params.get('user_name') || params.get('user_id') || 'Usuario';
-    const responseUrl = params.get('response_url');
 
     console.log('[Slack] slash command:', command, '| text:', text, '| user:', userName);
 
-    // Acknowledge immediately (Slack requires a response within 3 s)
-    // Then process in background and send delayed response via response_url
-    if (responseUrl) {
-      // Fire-and-forget: process after responding
-      (async () => {
-        try {
-          const { processSlackSlashCommand } = await import('@/lib/slack');
-          const reply = await processSlackSlashCommand(text, userName);
-          await fetch(responseUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: reply, response_type: 'in_channel' }),
-          });
-        } catch (err) {
-          console.error('[Slack] Error processing slash command:', err);
-        }
-      })();
-    }
-
-    return NextResponse.json({ text: '⏳ Un momento...' });
+    // Process synchronously and return the result in the initial response.
+    // Vercel kills the function as soon as the response is sent, so fire-and-forget
+    // via response_url doesn't work. Responding directly is simpler and faster anyway.
+    const reply = await processSlackSlashCommand(text, userName);
+    return NextResponse.json({ text: reply, response_type: 'in_channel' });
   }
 
   // ── JSON events (Event Subscriptions) ──
