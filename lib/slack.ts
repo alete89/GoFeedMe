@@ -266,6 +266,32 @@ function unknownMessage(): string {
 // ─── Main Event Processor ────────────────────────────────────────────
 
 /**
+ * Process a slash command (e.g. /almuerzo <text>) and return the reply text.
+ * The caller is responsible for posting the reply to Slack via response_url.
+ */
+export async function processSlackSlashCommand(
+  text: string,
+  userName: string
+): Promise<string> {
+  const intent = detectIntent(text.trim() || 'ayuda');
+
+  switch (intent.type) {
+    case 'help':
+      return helpMessage();
+    case 'menu':
+      return await handleMenu();
+    case 'status':
+      return await handleStatus();
+    case 'orders':
+      return await handleOrders();
+    case 'order':
+      return await handleOrder(intent, userName);
+    default:
+      return unknownMessage();
+  }
+}
+
+/**
  * Process a Slack event (app_mention or direct message) and reply.
  */
 export async function processSlackEvent(
