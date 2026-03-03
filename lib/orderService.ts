@@ -111,9 +111,25 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     };
   }
 
+  // ── Smart remap: if dish has no options but uses category options,
+  //    allow passing category_option in the option field for convenience
+  //    e.g. /pedir pollo grillado, ensalada mixta  (instead of /pedir pollo grillado, , ensalada mixta)
+  let resolvedOption = option;
+  let resolvedCategoryOption = category_option;
+  if (
+    !category_option &&
+    option &&
+    foundDish.usesCategoryOptions &&
+    foundCategory.categoryOptions &&
+    (!foundDish.options || foundDish.options.length === 0)
+  ) {
+    resolvedCategoryOption = option;
+    resolvedOption = undefined;
+  }
+
   // ── Validate dish options (e.g. Milanesa → Ternera/Pollo/Berenjena) ──
   if (foundDish.options && foundDish.options.length > 0) {
-    if (!option) {
+    if (!resolvedOption) {
       return {
         success: false,
         error: `El plato "${foundDish.name}" requiere que elijas una opción.`,
@@ -123,12 +139,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
 
     const validOption = foundDish.options.find(
-      (o) => o.toLowerCase().trim() === option.toLowerCase().trim()
+      (o) => o.toLowerCase().trim() === resolvedOption!.toLowerCase().trim()
     );
     if (!validOption) {
       return {
         success: false,
-        error: `"${option}" no es una opción válida para "${foundDish.name}".`,
+        error: `"${resolvedOption}" no es una opción válida para "${foundDish.name}".`,
         errorCode: 'INVALID_OPTION',
         errorData: { options: foundDish.options },
       };
@@ -137,7 +153,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   // ── Validate category options (e.g. garnish, sauce) ──
   if (foundDish.usesCategoryOptions && foundCategory.categoryOptions) {
-    if (!category_option) {
+    if (!resolvedCategoryOption) {
       return {
         success: false,
         error: `El plato "${foundDish.name}" requiere que elijas ${foundCategory.categoryOptions.label.toLowerCase()}.`,
@@ -150,12 +166,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     }
 
     const validCatOption = foundCategory.categoryOptions.options.find(
-      (o) => o.toLowerCase().trim() === category_option.toLowerCase().trim()
+      (o) => o.toLowerCase().trim() === resolvedCategoryOption!.toLowerCase().trim()
     );
     if (!validCatOption) {
       return {
         success: false,
-        error: `"${category_option}" no es válido para ${foundCategory.categoryOptions.label.toLowerCase()}.`,
+        error: `"${resolvedCategoryOption}" no es válido para ${foundCategory.categoryOptions.label.toLowerCase()}.`,
         errorCode: 'INVALID_CATEGORY_OPTION',
         errorData: {
           label: foundCategory.categoryOptions.label,
@@ -191,11 +207,11 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   // ── Build full dish name (same format as frontend) ──
   let fullDishName = foundDish.name;
-  if (option) {
-    fullDishName += ` (${option})`;
+  if (resolvedOption) {
+    fullDishName += ` (${resolvedOption})`;
   }
-  if (foundDish.usesCategoryOptions && category_option) {
-    fullDishName += option ? `, ${category_option}` : ` (${category_option})`;
+  if (foundDish.usesCategoryOptions && resolvedCategoryOption) {
+    fullDishName += resolvedOption ? `, ${resolvedCategoryOption}` : ` (${resolvedCategoryOption})`;
   }
 
   // ── Clean category name (strip emoji codes like :stew:) ──

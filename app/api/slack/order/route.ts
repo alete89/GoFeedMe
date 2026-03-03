@@ -7,20 +7,22 @@ import { placeOrder } from '@/lib/orderService';
  * Places a food order on behalf of the Slack user.
  *
  * Syntax:
- *   /order <plato>
- *   /order <plato>, <opción>
- *   /order <plato>, <opción>, <guarnición o salsa>
- *   /order <plato>, <opción>, <guarnición o salsa>; <observaciones>
+ *   /pedir <plato>
+ *   /pedir <plato>, <opción>
+ *   /pedir <plato>, <opción>, <guarnición o salsa>
+ *   /pedir <plato>, <opción>, <guarnición o salsa>; <observaciones>
+ *   /pedir <plato>, <guarnición o salsa>          ← shortcut when dish has no options
  *
  * The semicolon separates the order from free-text observations.
  * Commas separate dish → option → category option.
  *
  * Examples:
- *   /order ravioles
- *   /order milanesa, pollo
- *   /order milanesa, pollo, ensalada mixta
- *   /order milanesa, pollo, ensalada mixta; sin cebolla
- *   /order pollo grillado; sin sal y bien cocido
+ *   /pedir ravioles
+ *   /pedir milanesa, pollo
+ *   /pedir milanesa, pollo, ensalada mixta
+ *   /pedir milanesa, pollo, ensalada mixta; sin cebolla
+ *   /pedir pollo grillado, ensalada mixta
+ *   /pedir pollo grillado; sin sal y bien cocido
  *
  * Configure in Slack App → Slash Commands:
  *   Command:     /order
@@ -41,15 +43,16 @@ export async function POST(request: Request) {
   // ── Show usage if no text provided ──
   if (!text.trim()) {
     return ephemeral(
-      '*Uso:* `/order <plato>`\n\n' +
+      '*Uso:* `/pedir <plato>`\n\n' +
       'Con opciones:\n' +
-      '  `/order <plato>, <opción>`\n' +
-      '  `/order <plato>, <opción>, <guarnición>`\n' +
-      '  `/order <plato>, <opción>, <guarnición>; <observaciones>`\n\n' +
+      '  `/pedir <plato>, <opción>`\n' +
+      '  `/pedir <plato>, <guarnición>`  _(si el plato no tiene variantes)_\n' +
+      '  `/pedir <plato>, <opción>, <guarnición>; <observaciones>`\n\n' +
       'Ejemplos:\n' +
-      '  `/order ravioles`\n' +
-      '  `/order milanesa, pollo`\n' +
-      '  `/order milanesa, pollo, ensalada mixta; sin cebolla`\n\n' +
+      '  `/pedir ravioles`\n' +
+      '  `/pedir milanesa, pollo`\n' +
+      '  `/pedir pollo grillado, papas fritas`\n' +
+      '  `/pedir milanesa, pollo, ensalada mixta; sin cebolla`\n\n' +
       '_Primero usá `/menu` para ver los platos disponibles._'
     );
   }
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
         return ephemeral(
           `⚠️ ${result.error}\n` +
           `Opciones: ${opts}\n\n` +
-          `_Ej:_ \`/order ${dish}, <opción>\``
+          `_Ej:_ \`/pedir ${dish}, <opción>\``
         );
       }
       case 'INVALID_OPTION': {
@@ -105,7 +108,7 @@ export async function POST(request: Request) {
         return ephemeral(
           `⚠️ ${result.error}\n` +
           `Opciones: ${opts}\n\n` +
-          `_Ej:_ \`/order ${dish}, ${option ?? '...'}, <opción>\``
+          `_Ej:_ \`/pedir ${dish}, ${option ?? '<opción>'}, <guarnición>\``
         );
       }
       case 'INVALID_CATEGORY_OPTION': {
