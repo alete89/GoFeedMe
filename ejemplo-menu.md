@@ -18,7 +18,7 @@ Base de arroz, pollo grillado, hojas verdes, tomate, palta y morrones asados.
 
 Con lechuga, tomate y mayonesa de morrones asados
 
-### POLLO GRILLADO
+### POLLO GRILLADO SANDWICH
 Con hojas verdes, tomate y palta, aderezado con thousand island.
 
 ### PULLED PORK
