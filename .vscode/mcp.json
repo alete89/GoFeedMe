@@ -1,7 +1,7 @@
 {
 	"servers": {
 		"go-feed-me-mcp-server": {
-			"url": "https://go-feed-me.vercel.app/mcp/mcp",
+			"url": "https://go-feed-me.vercel.app/mcp",
 			"type": "http"
 		}
 	},

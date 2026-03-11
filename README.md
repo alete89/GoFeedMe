@@ -1,5 +1,5 @@
 # 🍽️ GoFeedMe
-
+**Producción:** https://go-feed-me.vercel.app/
 Aplicación web para gestionar pedidos de almuerzo en empresas. Permite cargar menús diarios, que los usuarios elijan sus platos, y ver un resumen de todos los pedidos.
 
 ## ✨ Características
@@ -123,6 +123,27 @@ GoFeedMe/
 ## 📦 Deployment
 
 Ver [DEPLOYMENT.md](DEPLOYMENT.md) para instrucciones detalladas de deployment en Vercel.
+
+**URL de producción:** https://go-feed-me.vercel.app/
+
+## 🤖 MCP (Model Context Protocol)
+
+La app expone un servidor MCP en `/mcp` compatible con clientes como Claude Desktop o VS Code Copilot.
+
+JSON de configuración:
+
+```json
+{
+  "mcpServers": {
+    "GoFeedMe": {
+      "type": "http",
+      "url": "https://go-feed-me.vercel.app/mcp"
+    }
+  }
+}
+```
+
+Tools disponibles: `get_menu`, `get_orders`, `get_orders_status`, `place_order`.
 
 ## 🛠️ Tecnologías
 
