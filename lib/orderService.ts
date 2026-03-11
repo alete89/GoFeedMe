@@ -1,5 +1,5 @@
 import 'server-only';
-import { getMenu, getOrders, getOrdersStatus, saveOrder } from './db';
+import { deleteOrder, getMenu, getOrders, getOrdersStatus, saveOrder } from './db';
 import { cleanCategoryName } from './utils';
 import type { Category, Dish } from './types';
 
@@ -182,14 +182,14 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   }
 
   // ── Check for duplicate name ──
-  if (!force) {
-    const existingOrders = await getOrders(targetDate);
-    const duplicate = existingOrders.find(
-      (order: Record<string, string>) =>
-        order.name.toLowerCase().trim() === name.toLowerCase().trim()
-    );
+  const existingOrders = await getOrders(targetDate);
+  const duplicate = existingOrders.find(
+    (order: Record<string, string>) =>
+      order.name.toLowerCase().trim() === name.toLowerCase().trim()
+  );
 
-    if (duplicate) {
+  if (duplicate) {
+    if (!force) {
       return {
         success: false,
         error: `Ya existe un pedido de "${duplicate.name}" para hoy: "${duplicate.dish}" (${duplicate.time}).`,
@@ -203,6 +203,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         },
       };
     }
+    // force=true: delete the existing order before placing a new one
+    await deleteOrder(duplicate.id as number);
   }
 
   // ── Build full dish name (same format as frontend) ──

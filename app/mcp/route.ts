@@ -177,7 +177,7 @@ IMPORTANTE: SIEMPRE preguntale al usuario si tiene alguna observación o persona
           .boolean()
           .optional()
           .describe(
-            'Si es true, permite hacer el pedido aunque ya exista uno con el mismo nombre. Por defecto, false.'
+            'Si es true, reemplaza el pedido existente con el mismo nombre. SOLO usar si el usuario confirmó explícitamente que quiere reemplazar su pedido anterior. Por defecto, false.'
           ),
       },
       async ({ name, dish, option, category_option, observations, date, force }) => {
@@ -217,7 +217,7 @@ IMPORTANTE: SIEMPRE preguntale al usuario si tiene alguna observación o persona
               break;
             case 'DUPLICATE_NAME': {
               const existing = result.errorData?.existingOrder as { name: string; dish: string; time: string };
-              errorText = `⚠️ Ya existe un pedido de "${existing.name}" para hoy: "${existing.dish}" (${existing.time}). Si querés reemplazarlo, volvé a llamar a place_order con force=true.`;
+              errorText = `⚠️ Ya existe un pedido de "${existing.name}" para hoy: "${existing.dish}" (${existing.time}). ¿Querés reemplazarlo? Confirmá con el usuario antes de volver a llamar a place_order con force=true.`;
               break;
             }
             default:
